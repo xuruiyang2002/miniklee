@@ -6,7 +6,7 @@ LDFLAGS = -nostdlib++ -L/usr/lib/llvm-14/lib -lLLVM -lpthread /usr/lib/x86_64-li
 # File names
 SRCS = src/main.cpp src/Executor.cpp src/ExecutionState.cpp
 OBJS = $(SRCS:.cpp=.o)
-EXEC = toy
+EXEC = minklee
 
 # Targets and rules
 all: $(EXEC)
@@ -22,5 +22,9 @@ $(EXEC): $(OBJS)
 # Clean up
 clean:
 	rm -f $(OBJS) $(EXEC)
+
+# Run test
+run:
+	./$(EXEC)
 
 .PHONY: all clean
