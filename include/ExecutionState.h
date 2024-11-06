@@ -28,7 +28,7 @@ public:
 
 class State {
 public:
-    std::unordered_map<const llvm::Value*, Expression> variables;
+    std::unordered_map<const llvm::Value*, Expression> symbolics;
     std::vector<std::string> pathConstraints;
 
     void setSymbolic(const llvm::Value* v, const Expression& expr);
