@@ -16,13 +16,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // Run symbolic executor on each function
+    // Create the executor to interpret the program
+    auto mainFunc = module->getFunction("main");
     Executor executor;
-    for (auto& function : *module) {
-        if (!function.isDeclaration()) {
-            executor.run(function);
-        }
-    }
+    executor.runFunctionAsMain(mainFunc);
 
     return 0;
 }

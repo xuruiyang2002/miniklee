@@ -11,16 +11,16 @@
 
 class Executor {
 public:
-    std::stack<State> stateStack;
+    std::stack<ExecutionState> stateStack;
 
-    void run(llvm::Function& function);
+    void runFunctionAsMain(llvm::Function* function);
 
     // Executor(llvm::LLVMContext& context) : context_(context) {}
 
     Executor() {}
 
 private:
-    void executeInstruction(llvm::Instruction& inst, State& state);
+    void executeInstruction(llvm::Instruction& inst, ExecutionState& state);
 
-    void handleBinaryOperation(llvm::BinaryOperator& binOp, State& state);
+    void handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state);
 };

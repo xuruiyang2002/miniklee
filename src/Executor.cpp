@@ -11,24 +11,32 @@
 #include "ExecutionState.h"
 
 
-void Executor::run(llvm::Function& function) {
-    State initialState;
-    stateStack.push(initialState);
+void Executor::runFunctionAsMain(llvm::Function *function) {
+    ExecutionState initialState(function);
+    auto cur_pc = initialState.pc;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    llvm::errs() << *cur_pc << "\n";
+    
+    // ExecutionState initialState;
+    // stateStack.push(initialState);
 
-    while (!stateStack.empty()) {
-        State currentState = stateStack.top();
-        stateStack.pop();
+    // while (!stateStack.empty()) {
+    //     ExecutionState currentState = stateStack.top();
+    //     stateStack.pop();
 
-        for (auto& block : function) {
-            for (auto& inst : block) {
-                executeInstruction(inst, currentState);
-            }
-        }
-    }
+    //     for (auto& block : *function) {
+    //         for (auto& inst : block) {
+    //             executeInstruction(inst, currentState);
+    //         }
+    //     }
+    // }
 }
 
 
-void Executor::executeInstruction(llvm::Instruction& inst, State& state) {
+void Executor::executeInstruction(llvm::Instruction& inst, ExecutionState& state) {
     llvm::errs() << inst << "\n";
     if (auto* binOp = llvm::dyn_cast<llvm::BinaryOperator>(&inst)) {
         handleBinaryOperation(*binOp, state);
@@ -37,7 +45,7 @@ void Executor::executeInstruction(llvm::Instruction& inst, State& state) {
     }
 }
 
-void Executor::handleBinaryOperation(llvm::BinaryOperator& binOp, State& state) {
+void Executor::handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state) {
     llvm::Value* leftOp = binOp.getOperand(0);
     llvm::Value* rightOp = binOp.getOperand(1);
 
