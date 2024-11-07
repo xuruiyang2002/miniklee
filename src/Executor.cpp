@@ -49,10 +49,12 @@ void Executor::runFunctionAsMain(llvm::Function *function) {
     while (!stateStack.empty()) {
         // 1. Select a state to work on.
         // FIXME: Need searcher to choose next state?
-        ExecutionState state = stateStack.top();
-        stateStack.pop();
+        ExecutionState &state = stateStack.top();
+        // stateStack.pop();
 
         llvm::Instruction *inst = &*state.pc;
+        stepInstruction(state);
+
         executeInstruction(state, inst);
 
         // 4. Update state
@@ -78,12 +80,40 @@ void Executor::stepInstruction(ExecutionState& state) {
 }
 
 void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst) {
-    llvm::errs() << inst << "\n";
-    if (auto* binOp = llvm::dyn_cast<llvm::BinaryOperator>(inst)) {
-        handleBinaryOperation(*binOp, state);
-    } else {
-        // Handle other instruction types as needed.
+    llvm::errs() << "Executing instruction\n";
+    switch (inst->getOpcode()) {
+    case llvm::Instruction::Alloca:
+        llvm::errs() << "Alloca\n";
+        break;
+    case llvm::Instruction::Add:
+        llvm::errs() << "Add\n";
+        break;
+    case llvm::Instruction::Load:
+        llvm::errs() << "Load\n";
+        break;
+    case llvm::Instruction::Store:
+        llvm::errs() << "Store\n";
+        break;
+    case llvm::Instruction::Br:
+        llvm::errs() << "Br\n";
+        break;
+    case llvm::Instruction::Call:
+        if (auto *callInst = llvm::dyn_cast<llvm::CallInst>(inst)) {
+            if (callInst->getCalledFunction() && 
+                callInst->getCalledFunction()->getName().startswith("llvm.dbg.declare")) {
+                // Skip this instruction
+                return;
+            } else {
+                assert(false && "Unknown call instruction");
+            }
+        }
+    
+    default:
+        llvm::errs() << "Unknown instruction: " << *inst << "\n";
+        assert(false && "Unknown instruction");
+        break;
     }
+
 }
 
 void Executor::updateStates(ExecutionState *current)  {
