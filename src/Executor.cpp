@@ -13,36 +13,83 @@
 
 void Executor::runFunctionAsMain(llvm::Function *function) {
     ExecutionState initialState(function);
+
+    // FIXME: DEBUGU INFO
     auto cur_pc = initialState.pc;
     cur_pc++;
     cur_pc++;
     cur_pc++;
     cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
+    cur_pc++;
     llvm::errs() << *cur_pc << "\n";
+
+    if (auto bi = llvm::dyn_cast<llvm::BranchInst>(cur_pc)) {
+        if (bi->isUnconditional()) {
+            cur_pc = bi->getSuccessor(0)->begin();
+            llvm::errs() << *cur_pc << "\n";
+        }
+    }
+
     
-    // ExecutionState initialState;
-    // stateStack.push(initialState);
+    stateStack.push(initialState);
 
-    // while (!stateStack.empty()) {
-    //     ExecutionState currentState = stateStack.top();
-    //     stateStack.pop();
+    // main interpreter loop
+    while (!stateStack.empty()) {
+        // 1. Select a state to work on.
+        // FIXME: Need searcher to choose next state?
+        ExecutionState state = stateStack.top();
+        stateStack.pop();
 
-    //     for (auto& block : *function) {
-    //         for (auto& inst : block) {
-    //             executeInstruction(inst, currentState);
-    //         }
-    //     }
-    // }
+        llvm::Instruction *inst = &*state.pc;
+        executeInstruction(state, inst);
+
+        // 4. Update state
+
+        // FIXME: DEBUG INFO 
+        // for (auto& block : *function) {
+        //     for (auto& inst : block) {
+        //         executeInstruction(inst, currentState);
+        //     }
+        //     llvm::errs() << "------ \n";
+        // }
+    }
 }
 
+void Executor::stepInstruction(ExecutionState& state) {
+    // FIXME: DEBUG INFO
+    llvm::errs() << "Step instruction\n";
 
-void Executor::executeInstruction(llvm::Instruction& inst, ExecutionState& state) {
+    state.prevPC = state.pc;
+    ++state.pc;
+
+    // TODO: Other logic code to handle haltExecution
+}
+
+void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst) {
     llvm::errs() << inst << "\n";
-    if (auto* binOp = llvm::dyn_cast<llvm::BinaryOperator>(&inst)) {
+    if (auto* binOp = llvm::dyn_cast<llvm::BinaryOperator>(inst)) {
         handleBinaryOperation(*binOp, state);
     } else {
         // Handle other instruction types as needed.
     }
+}
+
+void Executor::updateStates(ExecutionState *current)  {
+    llvm::errs() << "Updating states\n";
+    // TODO: Implement me
+    assert(current);
 }
 
 void Executor::handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state) {
@@ -63,6 +110,6 @@ void Executor::handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState
     state.setSymbolic(&binOp, resultExpr);
 
     // Output symbolic expression for tracing purposes
-    std::cout << "Executed " << binOp.getOpcodeName() << " instruction:\n";
-    std::cout << "  Result: " << resultExpr.expr << "\n";
+    // std::cout << "Executed " << binOp.getOpcodeName() << " instruction:\n";
+    // std::cout << "  Result: " << resultExpr.expr << "\n";
 }

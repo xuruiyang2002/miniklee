@@ -20,7 +20,11 @@ public:
     Executor() {}
 
 private:
-    void executeInstruction(llvm::Instruction& inst, ExecutionState& state);
+    void stepInstruction(ExecutionState& state);
+
+    void executeInstruction(ExecutionState& state, llvm::Instruction* inst);
+
+    void updateStates(ExecutionState *current);
 
     void handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state);
 };

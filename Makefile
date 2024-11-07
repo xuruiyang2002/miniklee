@@ -25,6 +25,7 @@ clean:
 
 # Run test
 run:
+	clang -emit-llvm -g -S ./test/example.c -o ./test/example.ll
 	./$(EXEC)
 
 .PHONY: all clean
