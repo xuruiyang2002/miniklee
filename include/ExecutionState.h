@@ -42,7 +42,7 @@ public:
     llvm::BasicBlock::iterator prevPC;
 
     // Store symbolic variables and their values
-    std::unordered_map<const llvm::Value*, Expression> symbolics;
+    std::unordered_map<const llvm::Value*, Expression> locals;
 
     // Path constraints collected so far
     std::vector<std::string> pathConstraints;
