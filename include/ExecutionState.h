@@ -1,4 +1,5 @@
-#pragma once
+#ifndef EXECUTIONSTATE_H
+#define EXECUTIONSTATE_H
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
@@ -63,3 +64,5 @@ public:
     // Add path constraints to the current control flow
     void addConstraint(const std::string& constraint);
 };
+
+#endif // EXECUTIONSTATE_H

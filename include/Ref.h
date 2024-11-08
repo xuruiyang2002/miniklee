@@ -1,3 +1,6 @@
+#ifndef REF_H
+#define REF_H
+
 template <class T>
 class ref
 {
@@ -163,3 +166,5 @@ public:
     bool operator==(const ref &rhs) const { return compare(rhs) == 0; }
     bool operator!=(const ref &rhs) const { return compare(rhs) != 0; }
 };
+
+#endif // REF_H

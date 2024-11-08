@@ -1,10 +1,6 @@
-#pragma once
-// #include <llvm/IR/Function.h>
-// #include <llvm/IR/BasicBlock.h>
-// #include <llvm/IR/Instruction.h>
-// #include <llvm/IR/Instructions.h>
-// #include <llvm/IR/Module.h>
-// #include <llvm/Support/raw_ostream.h>
+#ifndef EXECUTOR_H
+#define EXECUTOR_H
+
 #include <stack>
 #include <iostream>
 #include "ExecutionState.h"
@@ -30,3 +26,5 @@ private:
 
     void handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state);
 };
+
+#endif // EXECUTOR_H
