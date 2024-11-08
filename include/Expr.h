@@ -8,6 +8,9 @@
 
 class Expr {
 public:
+    static unsigned count;
+    static const unsigned MAGIC_HASH_CONSTANT = 39;
+
     // The type of an expression is simply its width, in bits. 
     typedef unsigned Width;
 
@@ -53,9 +56,9 @@ public:
     };
 public:
     unsigned hashValue;
-    Expr() {}
+    Expr() { Expr::count++; }
 
-    virtual ~Expr() {}
+    virtual ~Expr() { Expr::count--; }
 
     virtual Kind getKind() const = 0;
     virtual Width getWidth() const = 0;
