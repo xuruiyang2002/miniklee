@@ -41,6 +41,12 @@ void Executor::stepInstruction(ExecutionState& state) {
 
 void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst) {
     switch (inst->getOpcode()) {
+    case llvm::Instruction::Ret: {
+        // // FIXME: Handle return
+        stateStack.pop();
+        break;
+    }
+
     case llvm::Instruction::Alloca:
         llvm::errs() << "Alloca\n";
         break;
