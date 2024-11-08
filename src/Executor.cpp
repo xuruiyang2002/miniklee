@@ -49,9 +49,17 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
     }
 
     // Memory instructions...
-    case llvm::Instruction::Alloca:
+    case llvm::Instruction::Alloca: {
+        // TODO: remove debug info
         llvm::errs() << "Alloca\n";
+        llvm::AllocaInst *ai = llvm::cast<llvm::AllocaInst>(i);
+        assert("Support Int32 type only" 
+                && ai->getAllocatedType() == llvm::Type::getInt32Ty(i->getContext()));
+        const llvm::DataLayout &dataLayout = module->getDataLayout();
+        unsigned sizeInBits = dataLayout.getTypeSizeInBits(ai->getAllocatedType());
+        executeAlloc(state, sizeInBits, i);
         break;
+    }
 
     case llvm::Instruction::Load:
         llvm::errs() << "Load\n";
@@ -164,4 +172,13 @@ void Executor::updateStates(ExecutionState *current)  {
 
 void Executor::transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state) {
     state.pc = dst->begin();
+}
+
+
+void Executor::executeAlloc(ExecutionState& state, unsigned size, llvm::Instruction* inst) {
+    assert("Only Support Int32"
+        && size == llvm::Type::getInt32Ty(inst->getContext())->getPrimitiveSizeInBits());
+    // WARNING: Dangling pointer?
+    //          Maybe we should refactor the ConstantExpr to be more specific
+    state.locals.insert({inst, PhantomExpr::create(0, size)});
 }
