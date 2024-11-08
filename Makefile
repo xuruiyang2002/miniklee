@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++14 -Wall -I./include -I/usr/include/llvm-14 -I/usr/include/c+
 LDFLAGS = -nostdlib++ -L/usr/lib/llvm-14/lib -lLLVM -lpthread /usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
 # File names
-SRCS = src/main.cpp src/Executor.cpp src/ExecutionState.cpp
+SRCS = src/main.cpp src/Executor.cpp src/ExecutionState.cpp src/Expr.cpp
 OBJS = $(SRCS:.cpp=.o)
 EXEC = minklee
 
