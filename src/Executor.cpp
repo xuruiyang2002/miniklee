@@ -86,18 +86,23 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
     case llvm::Instruction::Alloca:
         llvm::errs() << "Alloca\n";
         break;
+
     case llvm::Instruction::Add:
         llvm::errs() << "Add\n";
         break;
+
     case llvm::Instruction::Load:
         llvm::errs() << "Load\n";
         break;
+
     case llvm::Instruction::Store:
         llvm::errs() << "Store\n";
         break;
+
     case llvm::Instruction::Br:
         llvm::errs() << "Br\n";
         break;
+
     case llvm::Instruction::Call:
         if (llvm::isa<llvm::DbgInfoIntrinsic>(inst))
             break;
