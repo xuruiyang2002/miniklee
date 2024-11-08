@@ -7,7 +7,7 @@
 #include "ExecutionState.h"
 
 ExecutionState::ExecutionState(llvm::Function* function)
-    : pc(function->begin()->begin()), prevPC(pc) {
+    : pc(function->begin()->begin()), prevPC(nullptr) {
 }
 
 ExecutionState::ExecutionState(const ExecutionState& state):
