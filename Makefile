@@ -28,4 +28,7 @@ run:
 	clang -emit-llvm -g -S ./test/example.c -o ./test/example.ll
 	./$(EXEC)
 
-.PHONY: all clean
+line:
+	find . -type f \( -name "*.cpp" -o -name "*.h" \) -exec wc -l {} +
+
+.PHONY: all clean run line
