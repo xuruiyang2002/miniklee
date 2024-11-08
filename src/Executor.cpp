@@ -128,6 +128,58 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
         break;
     }
 
+    case llvm::Instruction::ICmp: {
+        llvm::CmpInst *ci = llvm::cast<llvm::CmpInst>(inst);
+        llvm::ICmpInst *ii = llvm::cast<llvm::ICmpInst>(ci);
+
+        switch(ii->getPredicate()) {
+        case llvm::ICmpInst::ICMP_EQ: {
+            assert(false && "TODO: ICMP_EQ comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_NE: {
+            assert(false && "TODO: ICMP_NE comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_UGT: {
+            assert(false && "TODO: ICMP_UGT comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_UGE: {
+            assert(false && "TODO: ICMP_UGE comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_ULT: {
+            assert(false && "TODO: ICMP_ULT comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_ULE: {
+            assert(false && "TODO: ICMP_ULE comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_SGT: {
+            assert(false && "TODO: ICMP_SGT comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_SGE: {
+            assert(false && "TODO: ICMP_SGE comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_SLT: {
+            assert(false && "TODO: ICMP_SLT comparison");
+            break;
+        }
+        case llvm::ICmpInst::ICMP_SLE: {
+            assert(false && "TODO: ICMP_SLE comparison");
+            break;
+        }
+        default:
+            assert(false && " Unknown comparison. TODO: Use terminateStateOnExecError to finish.");
+        }
+        break;
+    }
+
+
     case llvm::Instruction::Call:
         if (llvm::isa<llvm::DbgInfoIntrinsic>(inst))
             break;
