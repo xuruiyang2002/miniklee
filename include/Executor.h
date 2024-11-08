@@ -23,8 +23,6 @@ private:
     void updateStates(ExecutionState *current);
 
     void transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state);
-
-    void handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state);
 };
 
 #endif // EXECUTOR_H

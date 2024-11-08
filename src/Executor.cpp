@@ -165,24 +165,3 @@ void Executor::updateStates(ExecutionState *current)  {
 void Executor::transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state) {
     state.pc = dst->begin();
 }
-void Executor::handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state) {
-    llvm::Value* leftOp = binOp.getOperand(0);
-    llvm::Value* rightOp = binOp.getOperand(1);
-
-    Expression leftExpr = state.getSymbolic(leftOp);
-    Expression rightExpr = state.getSymbolic(rightOp);
-
-    Expression resultExpr("unknown");
-
-    if (binOp.getOpcode() == llvm::Instruction::Add) {
-        resultExpr = leftExpr + rightExpr;
-    } else if (binOp.getOpcode() == llvm::Instruction::Sub) {
-        resultExpr = leftExpr - rightExpr;
-    }
-
-    state.setSymbolic(&binOp, resultExpr);
-
-    // Output symbolic expression for tracing purposes
-    // std::cout << "Executed " << binOp.getOpcodeName() << " instruction:\n";
-    // std::cout << "  Result: " << resultExpr.expr << "\n";
-}
