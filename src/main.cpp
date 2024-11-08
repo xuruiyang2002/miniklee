@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
     }
 
     // Create the executor to interpret the program
-    auto mainFunc = module->getFunction("main");
-    Executor executor;
+    Executor executor(std::move(module));
+    auto mainFunc = executor.module->getFunction("main");
     executor.runFunctionAsMain(mainFunc);
 
     return 0;

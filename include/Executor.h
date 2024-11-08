@@ -7,15 +7,18 @@
 
 class Executor {
 public:
+    std::unique_ptr<llvm::Module> module;
+
     std::stack<ExecutionState> stateStack;
 
     void runFunctionAsMain(llvm::Function* function);
 
-    // Executor(llvm::LLVMContext& context) : context_(context) {}
-
-    Executor() {}
+    // Constructor that accepts an llvm::Module pointer
+    explicit Executor(std::unique_ptr<llvm::Module> module) 
+        : module(std::move(module)) {}
 
 private:
+
     void stepInstruction(ExecutionState& state);
 
     void executeInstruction(ExecutionState& state, llvm::Instruction* inst);
@@ -23,6 +26,8 @@ private:
     void updateStates(ExecutionState *current);
 
     void transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state);
+
+    void executeAlloc(ExecutionState& state, unsigned size, llvm::Instruction* inst);
 };
 
 #endif // EXECUTOR_H
