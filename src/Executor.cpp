@@ -23,10 +23,10 @@ void Executor::runFunctionAsMain(llvm::Function *function) {
         ExecutionState &state = stateStack.top();
         // stateStack.pop();
 
-        llvm::Instruction *inst = &*state.pc;
+        llvm::Instruction *i = &*state.pc;
         stepInstruction(state);
 
-        executeInstruction(state, inst);
+        executeInstruction(state, i);
 
         // 4. Update state
     }
@@ -39,8 +39,8 @@ void Executor::stepInstruction(ExecutionState& state) {
     // TODO: Other logic code to handle haltExecution
 }
 
-void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst) {
-    switch (inst->getOpcode()) {
+void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
+    switch (i->getOpcode()) {
     case llvm::Instruction::Ret: {
         llvm::errs() << "Return\n";
         // // FIXME: Handle return
@@ -67,7 +67,7 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
 
     case llvm::Instruction::Br: {
         llvm::errs() << "Br\n";
-        llvm::BranchInst *bi = llvm::cast<llvm::BranchInst>(inst);
+        llvm::BranchInst *bi = llvm::cast<llvm::BranchInst>(i);
         if (bi->isUnconditional()) {
             transferToBasicBlock(bi->getSuccessor(0), state);
         } else {
@@ -92,7 +92,7 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
     }
 
     case llvm::Instruction::ICmp: {
-        llvm::CmpInst *ci = llvm::cast<llvm::CmpInst>(inst);
+        llvm::CmpInst *ci = llvm::cast<llvm::CmpInst>(i);
         llvm::ICmpInst *ii = llvm::cast<llvm::ICmpInst>(ci);
 
         switch(ii->getPredicate()) {
@@ -144,12 +144,12 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
 
 
     case llvm::Instruction::Call:
-        if (llvm::isa<llvm::DbgInfoIntrinsic>(inst))
+        if (llvm::isa<llvm::DbgInfoIntrinsic>(i))
             break;
         assert(false && "Unknown call instruction");
     
     default:
-        llvm::errs() << "Unknown instruction: " << *inst << "\n";
+        llvm::errs() << "Unknown instruction: " << *i << "\n";
         assert(false && "Unknown instruction");
         break;
     }
