@@ -74,6 +74,15 @@ public:
     /// Returns the hash value. 
     virtual unsigned computeHash();
 
+    /// isZero - Is this a constant zero.
+    bool isZero() const;
+    
+    /// isTrue - Is this the true expression.
+    bool isTrue() const;
+
+    /// isFalse - Is this the false expression.
+    bool isFalse() const;
+
 };
 
 class NonConstantExpr : public Expr {
