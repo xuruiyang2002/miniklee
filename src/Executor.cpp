@@ -14,36 +14,6 @@
 
 void Executor::runFunctionAsMain(llvm::Function *function) {
     ExecutionState initialState(function);
-
-    // FIXME: DEBUGU INFO
-    auto cur_pc = initialState.pc;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    cur_pc++;
-    llvm::errs() << *cur_pc << "\n";
-
-    if (auto bi = llvm::dyn_cast<llvm::BranchInst>(cur_pc)) {
-        if (bi->isUnconditional()) {
-            cur_pc = bi->getSuccessor(0)->begin();
-            llvm::errs() << *cur_pc << "\n";
-        }
-    }
-
-    
     stateStack.push(initialState);
 
     // main interpreter loop
@@ -59,14 +29,6 @@ void Executor::runFunctionAsMain(llvm::Function *function) {
         executeInstruction(state, inst);
 
         // 4. Update state
-
-        // FIXME: DEBUG INFO 
-        // for (auto& block : *function) {
-        //     for (auto& inst : block) {
-        //         executeInstruction(inst, currentState);
-        //     }
-        //     llvm::errs() << "------ \n";
-        // }
     }
 }
 
