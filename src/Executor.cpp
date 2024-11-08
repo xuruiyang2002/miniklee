@@ -71,9 +71,6 @@ void Executor::runFunctionAsMain(llvm::Function *function) {
 }
 
 void Executor::stepInstruction(ExecutionState& state) {
-    // FIXME: DEBUG INFO
-    llvm::errs() << "Step instruction\n";
-
     state.prevPC = state.pc;
     ++state.pc;
 
@@ -81,7 +78,6 @@ void Executor::stepInstruction(ExecutionState& state) {
 }
 
 void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst) {
-    llvm::errs() << "Executing instruction\n";
     switch (inst->getOpcode()) {
     case llvm::Instruction::Alloca:
         llvm::errs() << "Alloca\n";
@@ -166,7 +162,7 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
             break;
         }
         case llvm::ICmpInst::ICMP_SLT: {
-            assert(false && "TODO: ICMP_SLT comparison");
+            llvm::errs() << "ICMP_SLT comparison\n";
             break;
         }
         case llvm::ICmpInst::ICMP_SLE: {
