@@ -1,4 +1,8 @@
 #include "Expr.h"
+#include "llvm/Support/Casting.h"
+
+
+unsigned Expr::count = 0;
 
 void Expr::printKind(llvm::raw_ostream &os, Kind k) {
     switch(k) {
@@ -60,4 +64,16 @@ void Expr::printWidth(llvm::raw_ostream &os, Width width) {
     case Expr::Int8: os << "Expr::Int8"; break;
     default: os << "<invalid type: " << (unsigned) width << ">";
     }
+}
+
+ref<ConstantExpr> ConstantExpr::Not() {
+    return ConstantExpr::alloc(~value);
+}
+
+ref<Expr> NotExpr::create(const ref<Expr> e) {
+    if (ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(e.get())) {
+        return CE->Not();
+    }
+    
+    return NotExpr::alloc(e);
 }

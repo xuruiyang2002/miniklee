@@ -161,7 +161,7 @@ public:
         return r;
     }
     
-    static ref<Expr> create(const ref<Expr> &e);
+    static ref<Expr> create(const ref<Expr> e);
 
     Width getWidth() const { return expr->getWidth(); }
     Kind getKind() const { return Not; }
@@ -340,7 +340,16 @@ public:
     bool isAllOnes() const {
         return getAPValue().isAllOnes();
     }
+
+    ref<ConstantExpr> Not();
 };
+
+// FIXME: 
+class PhantomExpr : public ConstantExpr {
+public:
+    static const Kind kind = Expr::InvalidKind;
+};
+
     // Implementations
     inline bool Expr::isZero() const {
     if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
