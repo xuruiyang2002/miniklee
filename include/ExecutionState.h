@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 
+#include "Expr.h"
+
 class ExecutionState {
 public:
     // FIXME:
@@ -21,7 +23,7 @@ public:
     llvm::BasicBlock::iterator prevPC;
 
     // Store symbolic variables and their values
-    std::unordered_map<const llvm::Value*, Expression> locals;
+    std::unordered_map<const llvm::Value*, ref<Expr>> locals;
 
     // Path constraints collected so far
     std::vector<std::string> pathConstraints;
@@ -33,11 +35,6 @@ public:
     ExecutionState(llvm::Function *f);
 
     ExecutionState(const ExecutionState& state);
-
-    // Symbolic getter and setter functions
-    void setSymbolic(const llvm::Value* v, const Expression& expr);
-
-    Expression getSymbolic(const llvm::Value* v) const;
 
     // Add path constraints to the current control flow
     void addConstraint(const std::string& constraint);
