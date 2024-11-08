@@ -2,6 +2,7 @@
 #define EXPR_H
 
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APFloat.h"
 #include "Ref.h"
@@ -85,6 +86,9 @@ public:
 
     /// isFalse - Is this the false expression.
     bool isFalse() const;
+
+    static void printKind(llvm::raw_ostream& os, Kind k);
+    static void printWidth(llvm::raw_ostream& os, Width w);
 
 };
 
@@ -375,29 +379,26 @@ public:
     bool isAllOnes() const {
         return getAPValue().isAllOnes();
     }
-
+};
     // Implementations
-
     inline bool Expr::isZero() const {
-    if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(this))
+    if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
         return CE->isZero();
     return false;
     }
     
     inline bool Expr::isTrue() const {
     assert(getWidth() == Expr::Bool && "Invalid isTrue() call!");
-    if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(this))
+    if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
         return CE->isTrue();
     return false;
     }
     
     inline bool Expr::isFalse() const {
     assert(getWidth() == Expr::Bool && "Invalid isFalse() call!");
-    if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(this))
+    if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
         return CE->isFalse();
     return false;
     }
-
-};
 
 #endif // EXPR_H
