@@ -48,12 +48,9 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
         break;
     }
 
+    // Memory instructions...
     case llvm::Instruction::Alloca:
         llvm::errs() << "Alloca\n";
-        break;
-
-    case llvm::Instruction::Add:
-        llvm::errs() << "Add\n";
         break;
 
     case llvm::Instruction::Load:
@@ -62,6 +59,10 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
 
     case llvm::Instruction::Store:
         llvm::errs() << "Store\n";
+        break;
+
+    case llvm::Instruction::Add:
+        llvm::errs() << "Add\n";
         break;
 
     case llvm::Instruction::Br: {
