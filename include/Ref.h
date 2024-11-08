@@ -1,6 +1,45 @@
 #ifndef REF_H
 #define REF_H
 
+template<class T>
+class ref;
+
+/// Reference counter to be used as part of a ref-managed struct or class
+class ReferenceCounter {
+    template<class T>
+    friend class ref;
+
+    /// Count how often the object has been referenced.
+    unsigned refCount = 0;
+
+    public:
+    ReferenceCounter() = default;
+    ~ReferenceCounter() = default;
+
+    // Explicitly initialise reference counter with 0 again
+    // As this object is part of another object, the copy-constructor
+    // might be invoked as part of the other one.
+    ReferenceCounter(const ReferenceCounter& ) {}
+
+    /// Returns the number of parallel references of this objects
+    /// \return number of references on this object
+    unsigned getCount() {return refCount;}
+
+    // Copy assignment operator
+    ReferenceCounter &operator=(const ReferenceCounter &a) {
+        if (this == &a)
+        return *this;
+        // The new copy won't be referenced
+        refCount = 0;
+        return *this;
+    }
+
+    // Do not allow move operations for the reference counter
+    // as otherwise, references become incorrect.
+    ReferenceCounter(ReferenceCounter &&r) noexcept = delete;
+    ReferenceCounter &operator=(ReferenceCounter &&other) noexcept = delete;
+};
+
 template <class T>
 class ref
 {

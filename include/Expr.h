@@ -55,6 +55,10 @@ public:
         CmpKindFirst = Eq,
         CmpKindLast = Sge
     };
+
+    /// @brief Required by klee::ref-managed objects
+    class ReferenceCounter _refCount;
+
 public:
     unsigned hashValue;
     Expr() { Expr::count++; }
@@ -294,49 +298,7 @@ public:
   /// native ConstantExpr APIs.
     const llvm::APInt &getAPValue() const { return value; }
 
-  /// getZExtValue - Returns the constant value zero extended to the
-  /// return type of this method.
-  ///
-  ///\param bits - optional parameter that can be used to check that the
-  /// number of bits used by this constant is <= to the parameter
-  /// value. This is useful for checking that type casts won't truncate
-  /// useful bits.
-  ///
-  /// Example: unit8_t byte= (unit8_t) constant->getZExtValue(8);
-    uint64_t getZExtValue(unsigned bits = 64) const {
-        assert(getWidth() <= bits && "Value may be out of range!");
-        return value.getZExtValue();
-    }
-
-  /// getLimitedValue - If this value is smaller than the specified limit,
-  /// return it, otherwise return the limit value.
-    uint64_t getLimitedValue(uint64_t Limit = ~0ULL) const {
-        return value.getLimitedValue(Limit);
-    }
-
-  /// toString - Return the constant value as a string
-  /// \param Res specifies the string for the result to be placed in
-  /// \param radix specifies the base (e.g. 2,10,16). The default is base 10
-    void toString(std::string &Res, unsigned radix = 10) const;
-
-    int compareContents(const Expr &b) const {
-        const ConstantExpr &cb = static_cast<const ConstantExpr &>(b);
-        if (getWidth() != cb.getWidth())
-        return getWidth() < cb.getWidth() ? -1 : 1;
-        if (value == cb.value)
-        return 0;
-        return value.ult(cb.value) ? -1 : 1;
-    }
-
-    virtual ref<Expr> rebuild(ref<Expr> kids[]) const {
-        assert(0 && "rebuild() on ConstantExpr");
-        return const_cast<ConstantExpr *>(this);
-    }
-
     virtual unsigned computeHash();
-
-    static ref<Expr> fromMemory(void *address, Width w);
-    void toMemory(void *address);
 
     static ref<ConstantExpr> alloc(const llvm::APInt &v) {
         ref<ConstantExpr> r(new ConstantExpr(v));
@@ -363,9 +325,6 @@ public:
 
   /// isZero - Is this a constant zero.
     bool isZero() const { return getAPValue().isMinValue(); }
-
-  /// isOne - Is this a constant one.
-    bool isOne() const { return getLimitedValue() == 1; }
 
   /// isTrue - Is this the true expression.
     bool isTrue() const {
