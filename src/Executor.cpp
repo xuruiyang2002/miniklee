@@ -1,6 +1,7 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instruction.h>
+#include "llvm/IR/IntrinsicInst.h"
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/raw_ostream.h>
@@ -98,15 +99,9 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
         llvm::errs() << "Br\n";
         break;
     case llvm::Instruction::Call:
-        if (auto *callInst = llvm::dyn_cast<llvm::CallInst>(inst)) {
-            if (callInst->getCalledFunction() && 
-                callInst->getCalledFunction()->getName().startswith("llvm.dbg.declare")) {
-                // Skip this instruction
-                return;
-            } else {
-                assert(false && "Unknown call instruction");
-            }
-        }
+        if (llvm::isa<llvm::DbgInfoIntrinsic>(inst))
+            break;
+        assert(false && "Unknown call instruction");
     
     default:
         llvm::errs() << "Unknown instruction: " << *inst << "\n";
