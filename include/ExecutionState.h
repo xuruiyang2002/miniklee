@@ -7,8 +7,6 @@
 #include <vector>
 #include <string>
 
-#include "InstIterator.h"
-
 class Expression {
 public:
     std::string expr;
