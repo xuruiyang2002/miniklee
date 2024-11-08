@@ -99,9 +99,34 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* inst
         llvm::errs() << "Store\n";
         break;
 
-    case llvm::Instruction::Br:
+    case llvm::Instruction::Br: {
         llvm::errs() << "Br\n";
+        llvm::BranchInst *bi = llvm::cast<llvm::BranchInst>(inst);
+        if (bi->isUnconditional()) {
+            transferToBasicBlock(bi->getSuccessor(0), state);
+        } else {
+        // // FIXME: Find a way that we don't have this hidden dependency.
+        // assert(bi->getCondition() == bi->getOperand(0) &&
+        //         "Wrong operand index!");
+        // ref<Expr> cond = eval(ki, 0, state).value;
+
+        // cond = optimizer.optimizeExpr(cond, false);
+        // Executor::StatePair branches = fork(state, cond, false, BranchType::Conditional);
+
+        // // NOTE: There is a hidden dependency here, markBranchVisited
+        // // requires that we still be in the context of the branch
+        // // instruction (it reuses its statistic id). Should be cleaned
+        // // up with convenient instruction specific data.
+        // if (statsTracker && state.stack.back().kf->trackCoverage)
+        //     statsTracker->markBranchVisited(branches.first, branches.second);
+
+        // if (branches.first)
+        //     transferToBasicBlock(bi->getSuccessor(0), bi->getParent(), *branches.first);
+        // if (branches.second)
+        //     transferToBasicBlock(bi->getSuccessor(1), bi->getParent(), *branches.second);
+        }
         break;
+    }
 
     case llvm::Instruction::Call:
         if (llvm::isa<llvm::DbgInfoIntrinsic>(inst))
@@ -122,6 +147,9 @@ void Executor::updateStates(ExecutionState *current)  {
     assert(current);
 }
 
+void Executor::transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state) {
+    state.pc = dst->begin();
+}
 void Executor::handleBinaryOperation(llvm::BinaryOperator& binOp, ExecutionState& state) {
     llvm::Value* leftOp = binOp.getOperand(0);
     llvm::Value* rightOp = binOp.getOperand(1);
