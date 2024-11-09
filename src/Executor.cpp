@@ -61,9 +61,16 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
         break;
     }
 
-    case llvm::Instruction::Load:
+    case llvm::Instruction::Load: {
         llvm::errs() << "Load\n";
+        llvm::LoadInst *li = llvm::cast<llvm::LoadInst>(i);
+        
+        llvm::Instruction *address = llvm::dyn_cast<llvm::Instruction>(li->getPointerOperand());
+        assert(address && "Pointer Operand expected");
+
+        executeMemoryOperation(state, false, address, 0, li /* simply the Load instr itself */);
         break;
+    }
 
     case llvm::Instruction::Store: {
         llvm::errs() << "Store\n";
@@ -210,10 +217,15 @@ void Executor::executeMemoryOperation(ExecutionState& state,
                             bool isWrite, 
                             llvm::Instruction *address,
                             ref<Expr> value, /* undef if read */
-                            llvm::Instruction* i /* undef if wirte*/) {
+                            llvm::Instruction* target /* undef if wirte*/) {
     if (isWrite) { // Interpret the Store instruction
         // WARNING: Check whether override the latent value?
+        assert(!target);
         state.locals.insert({address, value});
     } else { // Interpret the Load instruction
+        assert(!value);
+        // FIXME: Wrap a set of APIs
+        auto loadedValue = state.locals.find(address)->second;
+        state.locals.insert({target, loadedValue});
     }
 }
