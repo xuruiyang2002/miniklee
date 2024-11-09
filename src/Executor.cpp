@@ -215,7 +215,13 @@ void Executor::executeAlloc(ExecutionState& state, unsigned size, Instruction* i
 }
 
 ref<Expr> Executor::getValue(Instruction* i, ExecutionState& state) {
-    return state.locals.find(i)->second;
+    // return state.locals.find(i)->second;
+    auto it = state.locals.find(i);
+    if (it != state.locals.end()) {
+        return it->second;
+    } else {
+        return nullptr;
+    }
 }
 
 
