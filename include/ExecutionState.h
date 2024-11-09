@@ -9,6 +9,8 @@
 
 #include "Expr.h"
 
+using namespace miniklee;
+
 class ExecutionState {
 public:
     // FIXME:

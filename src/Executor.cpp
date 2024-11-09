@@ -12,7 +12,10 @@
 #include "ExecutionState.h"
 
 
-void Executor::runFunctionAsMain(llvm::Function *function) {
+using namespace llvm;
+using namespace miniklee;
+
+void Executor::runFunctionAsMain(Function *function) {
     ExecutionState initialState(function);
     stateStack.push(initialState);
 
@@ -23,7 +26,7 @@ void Executor::runFunctionAsMain(llvm::Function *function) {
         ExecutionState &state = stateStack.top();
         // stateStack.pop();
 
-        llvm::Instruction *i = &*state.pc;
+        Instruction *i = &*state.pc;
         stepInstruction(state);
 
         executeInstruction(state, i);
@@ -39,58 +42,57 @@ void Executor::stepInstruction(ExecutionState& state) {
     // TODO: Other logic code to handle haltExecution
 }
 
-void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
+void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     switch (i->getOpcode()) {
-    case llvm::Instruction::Ret: {
-        llvm::errs() << "Return\n";
+    case Instruction::Ret: {
+        errs() << "Return\n";
         // // FIXME: Handle return
         stateStack.pop();
         break;
     }
 
     // Memory instructions...
-    case llvm::Instruction::Alloca: {
+    case Instruction::Alloca: {
         // TODO: remove debug info
-        llvm::errs() << "Alloca\n";
-        llvm::AllocaInst *ai = llvm::cast<llvm::AllocaInst>(i);
+        errs() << "Alloca\n";
+        AllocaInst *ai = cast<AllocaInst>(i);
         assert("Support Int32 type only" 
-                && ai->getAllocatedType() == llvm::Type::getInt32Ty(i->getContext()));
-        const llvm::DataLayout &dataLayout = module->getDataLayout();
+                && ai->getAllocatedType() == Type::getInt32Ty(i->getContext()));
+        const DataLayout &dataLayout = module->getDataLayout();
         unsigned sizeInBits = dataLayout.getTypeSizeInBits(ai->getAllocatedType());
         executeAlloc(state, sizeInBits, i);
         break;
     }
 
-    case llvm::Instruction::Load: {
-        llvm::errs() << "Load\n";
-        llvm::LoadInst *li = llvm::cast<llvm::LoadInst>(i);
+    case Instruction::Load: {
+        errs() << "Load\n";
+        LoadInst *li = cast<LoadInst>(i);
         
-        llvm::Instruction *address = llvm::dyn_cast<llvm::Instruction>(li->getPointerOperand());
+        Instruction *address = dyn_cast<Instruction>(li->getPointerOperand());
         assert(address && "Pointer Operand expected");
 
         executeMemoryOperation(state, false, address, 0, li /* simply the Load instr itself */);
         break;
     }
 
-    case llvm::Instruction::Store: {
-        llvm::errs() << "Store\n";
-        llvm::StoreInst *si = llvm::cast<llvm::StoreInst>(i);
+    case Instruction::Store: {
+        errs() << "Store\n";
+        StoreInst *si = cast<StoreInst>(i);
         // Retrieve the target address
-        llvm::Instruction *target = llvm::dyn_cast<llvm::Instruction>(si->getOperand(1));
+        Instruction *target = dyn_cast<Instruction>(si->getOperand(1));
         if (!target)
             assert(false && "Target is not an Instruction");
         // Retrieve the value to be stored
-        llvm::Value *value = si->getValueOperand();
+        Value *value = si->getValueOperand();
 
-        if (llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(value)) {
+        if (ConstantInt *ci = dyn_cast<ConstantInt>(value)) {
             // Deal with constant, just assign value
             assert(ci->getType()->isIntegerTy(32) && "Int32 expected");
             int32_t rawInt32Value = static_cast<int32_t>(ci->getSExtValue());
-            ref<ConstantExpr> int32Value = ConstantExpr::alloc(rawInt32Value, Expr::Int32);
+            ref<miniklee::ConstantExpr> int32Value = miniklee::ConstantExpr::alloc(rawInt32Value, Expr::Int32);
             executeMemoryOperation(state, true, target, int32Value, 0);
         } else {
             // Deal with pointer, then fetch pointed and assign
-            llvm::Instruction *i = llvm::cast<llvm::Instruction>(value);
             ref<Expr> pointed = getValue(target, state);
             executeMemoryOperation(state, true, target, pointed, 0);
         }
@@ -98,13 +100,13 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
         break;
     }
 
-    case llvm::Instruction::Add:
-        llvm::errs() << "Add\n";
+    case Instruction::Add:
+        errs() << "Add\n";
         break;
 
-    case llvm::Instruction::Br: {
-        llvm::errs() << "Br\n";
-        llvm::BranchInst *bi = llvm::cast<llvm::BranchInst>(i);
+    case Instruction::Br: {
+        errs() << "Br\n";
+        BranchInst *bi = cast<BranchInst>(i);
         if (bi->isUnconditional()) {
             transferToBasicBlock(bi->getSuccessor(0), state);
         } else {
@@ -112,7 +114,7 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
                     "Wrong operand index!");
             
             // // FIXME: Handle branches
-            llvm::errs() << "Conditional Branch\n";
+            errs() << "Conditional Branch\n";
             transferToBasicBlock(bi->getSuccessor(1), state);
 
             // ref<Expr> cond = eval(ki, 0, state).value;
@@ -128,48 +130,48 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
         break;
     }
 
-    case llvm::Instruction::ICmp: {
-        llvm::CmpInst *ci = llvm::cast<llvm::CmpInst>(i);
-        llvm::ICmpInst *ii = llvm::cast<llvm::ICmpInst>(ci);
+    case Instruction::ICmp: {
+        CmpInst *ci = cast<CmpInst>(i);
+        ICmpInst *ii = cast<ICmpInst>(ci);
 
         switch(ii->getPredicate()) {
-        case llvm::ICmpInst::ICMP_EQ: {
+        case ICmpInst::ICMP_EQ: {
             assert(false && "TODO: ICMP_EQ comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_NE: {
+        case ICmpInst::ICMP_NE: {
             assert(false && "TODO: ICMP_NE comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_UGT: {
+        case ICmpInst::ICMP_UGT: {
             assert(false && "TODO: ICMP_UGT comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_UGE: {
+        case ICmpInst::ICMP_UGE: {
             assert(false && "TODO: ICMP_UGE comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_ULT: {
+        case ICmpInst::ICMP_ULT: {
             assert(false && "TODO: ICMP_ULT comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_ULE: {
+        case ICmpInst::ICMP_ULE: {
             assert(false && "TODO: ICMP_ULE comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_SGT: {
+        case ICmpInst::ICMP_SGT: {
             assert(false && "TODO: ICMP_SGT comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_SGE: {
+        case ICmpInst::ICMP_SGE: {
             assert(false && "TODO: ICMP_SGE comparison");
             break;
         }
-        case llvm::ICmpInst::ICMP_SLT: {
-            llvm::errs() << "ICMP_SLT comparison\n";
+        case ICmpInst::ICMP_SLT: {
+            errs() << "ICMP_SLT comparison\n";
             break;
         }
-        case llvm::ICmpInst::ICMP_SLE: {
+        case ICmpInst::ICMP_SLE: {
             assert(false && "TODO: ICMP_SLE comparison");
             break;
         }
@@ -180,13 +182,13 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
     }
 
 
-    case llvm::Instruction::Call:
-        if (llvm::isa<llvm::DbgInfoIntrinsic>(i))
+    case Instruction::Call:
+        if (isa<DbgInfoIntrinsic>(i))
             break;
         assert(false && "Unknown call instruction");
     
     default:
-        llvm::errs() << "Unknown instruction: " << *i << "\n";
+        errs() << "Unknown instruction: " << *i << "\n";
         assert(false && "Unknown instruction");
         break;
     }
@@ -194,34 +196,34 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
 }
 
 void Executor::updateStates(ExecutionState *current)  {
-    llvm::errs() << "Updating states\n";
+    errs() << "Updating states\n";
     // TODO: Implement me
     assert(current);
 }
 
-void Executor::transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state) {
+void Executor::transferToBasicBlock(BasicBlock *dst, ExecutionState &state) {
     state.pc = dst->begin();
 }
 
 
-void Executor::executeAlloc(ExecutionState& state, unsigned size, llvm::Instruction* inst) {
+void Executor::executeAlloc(ExecutionState& state, unsigned size, Instruction* inst) {
     assert("Only Support Int32"
-        && size == llvm::Type::getInt32Ty(inst->getContext())->getPrimitiveSizeInBits());
+        && size == Type::getInt32Ty(inst->getContext())->getPrimitiveSizeInBits());
     // WARNING: Dangling pointer?
     //          Maybe we should refactor the ConstantExpr to be more specific
     state.locals.insert({inst, PhantomExpr::create(0, size)});
 }
 
-ref<Expr> Executor::getValue(llvm::Instruction* i, ExecutionState& state) {
+ref<Expr> Executor::getValue(Instruction* i, ExecutionState& state) {
     return state.locals.find(i)->second;
 }
 
 
 void Executor::executeMemoryOperation(ExecutionState& state, 
                             bool isWrite, 
-                            llvm::Instruction *address,
+                            Instruction *address,
                             ref<Expr> value, /* undef if read */
-                            llvm::Instruction* target /* undef if wirte*/) {
+                            Instruction* target /* undef if wirte*/) {
     if (isWrite) { // Interpret the Store instruction
         // WARNING: Check whether override the latent value?
         assert(!target);

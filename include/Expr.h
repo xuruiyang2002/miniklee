@@ -7,6 +7,7 @@
 #include "llvm/ADT/APFloat.h"
 #include "Ref.h"
 
+namespace miniklee {
 class Expr {
 public:
     static unsigned count;
@@ -370,5 +371,7 @@ public:
         return CE->isFalse();
     return false;
     }
+
+}
 
 #endif // EXPR_H

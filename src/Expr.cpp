@@ -1,6 +1,8 @@
 #include "Expr.h"
 #include "llvm/Support/Casting.h"
 
+using namespace miniklee;
+
 
 unsigned Expr::count = 0;
 
