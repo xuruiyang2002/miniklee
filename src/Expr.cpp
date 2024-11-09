@@ -55,6 +55,16 @@ unsigned ConstantExpr::computeHash() {
     return hashValue;
 }
 
+unsigned InvalidKindExpr::computeHash() {
+    Expr::Width w = getWidth();
+    if (w <= 64)
+        hashValue = value.getLimitedValue() ^ (w * MAGIC_HASH_CONSTANT);
+    else
+        hashValue = hash_value(value) ^ (w * MAGIC_HASH_CONSTANT);
+
+    return hashValue;
+}
+
 unsigned NotExpr::computeHash() {
     hashValue = expr->hash() * Expr::MAGIC_HASH_CONSTANT * Expr::Not;
     return hashValue;

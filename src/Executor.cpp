@@ -211,7 +211,7 @@ void Executor::executeAlloc(ExecutionState& state, unsigned size, Instruction* i
         && size == Type::getInt32Ty(inst->getContext())->getPrimitiveSizeInBits());
     // WARNING: Dangling pointer?
     //          Maybe we should refactor the ConstantExpr to be more specific
-    state.locals.insert({inst, PhantomExpr::create(0, size)});
+    state.locals.insert({inst, miniklee::InvalidKindExpr::create(0, size)});
 }
 
 ref<Expr> Executor::getValue(Instruction* i, ExecutionState& state) {

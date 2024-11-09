@@ -275,102 +275,90 @@ COMPARISON_EXPR_CLASS(Sge)
 
 // Terminal Exprs
 
-class ConstantExpr : public Expr {
-public:
-    static const Kind kind = Constant;
-    static const unsigned numKids = 0;
+#define TERMINAL_EXPR_CLASS(_class_kind)                                     \
+class _class_kind##Expr : public Expr {\
+public:\
+    static const Kind kind = _class_kind;\
+    static const unsigned numKids = 0;\
+\
+private:\
+    llvm::APInt value;\
+    _class_kind##Expr(const llvm::APInt &v) : value(v) {}\
+\
+public:\
+    ~_class_kind##Expr() {}\
+\
+    Width getWidth() const { return value.getBitWidth(); }\
+    Kind getKind() const { return _class_kind; }\
+\
+    unsigned getNumKids() const { return 0; }\
+    ref<Expr> getKid(unsigned i) const { return 0; }\
+\
+    const llvm::APInt &getAPValue() const { return value; }\
+\
+    virtual unsigned computeHash();\
+\
+    static ref<_class_kind##Expr> alloc(const llvm::APInt &v) {\
+        ref<_class_kind##Expr> r(new _class_kind##Expr(v));\
+        r->computeHash();\
+        return r;\
+    }\
+\
+    static ref<_class_kind##Expr> alloc(const llvm::APFloat &f) {\
+        return alloc(f.bitcastToAPInt());\
+    }\
+\
+    static ref<_class_kind##Expr> alloc(uint64_t v, Width w) {\
+        return alloc(llvm::APInt(w, v));\
+    }\
+\
+    static ref<_class_kind##Expr> create(uint64_t v, Width w) {\
+        return alloc(v, w);\
+    }\
+\
+    static bool classof(const Expr *E) { return E->getKind() == Expr::_class_kind; }\
+    static bool classof(const _class_kind##Expr *) { return true; }\
+\
+    bool isZero() const { return getAPValue().isMinValue(); }\
+\
+    bool isTrue() const {\
+        return (getWidth() == Expr::Bool && value.getBoolValue() == true);\
+    }\
+\
+    bool isFalse() const {\
+        return (getWidth() == Expr::Bool && value.getBoolValue() == false);\
+    }\
+\
+    bool isAllOnes() const {\
+        return getAPValue().isAllOnes();\
+    }\
+\
+    ref<_class_kind##Expr> Not();\
+};\
 
-private:
-    llvm::APInt value;
-    ConstantExpr(const llvm::APInt &v) : value(v) {}
+TERMINAL_EXPR_CLASS(Constant)
+TERMINAL_EXPR_CLASS(InvalidKind)
 
-public:
-    ~ConstantExpr() {}
+// Implementations
+inline bool Expr::isZero() const {
+if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
+    return CE->isZero();
+return false;
+}
 
-    Width getWidth() const { return value.getBitWidth(); }
-    Kind getKind() const { return Constant; }
+inline bool Expr::isTrue() const {
+assert(getWidth() == Expr::Bool && "Invalid isTrue() call!");
+if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
+    return CE->isTrue();
+return false;
+}
 
-    unsigned getNumKids() const { return 0; }
-    ref<Expr> getKid(unsigned i) const { return 0; }
-
-  /// getAPValue - Return the arbitrary precision value directly.
-  ///
-  /// Clients should generally not use the APInt value directly and instead use
-  /// native ConstantExpr APIs.
-    const llvm::APInt &getAPValue() const { return value; }
-
-    virtual unsigned computeHash();
-
-    static ref<ConstantExpr> alloc(const llvm::APInt &v) {
-        ref<ConstantExpr> r(new ConstantExpr(v));
-        r->computeHash();
-        return r;
-    }
-
-    static ref<ConstantExpr> alloc(const llvm::APFloat &f) {
-        return alloc(f.bitcastToAPInt());
-    }
-
-    static ref<ConstantExpr> alloc(uint64_t v, Width w) {
-        return alloc(llvm::APInt(w, v));
-    }
-
-    static ref<ConstantExpr> create(uint64_t v, Width w) {
-        return alloc(v, w);
-    }
-
-  static bool classof(const Expr *E) { return E->getKind() == Expr::Constant; }
-  static bool classof(const ConstantExpr *) { return true; }
-
-  /* Utility Functions */
-
-  /// isZero - Is this a constant zero.
-    bool isZero() const { return getAPValue().isMinValue(); }
-
-  /// isTrue - Is this the true expression.
-    bool isTrue() const {
-        return (getWidth() == Expr::Bool && value.getBoolValue() == true);
-    }
-
-  /// isFalse - Is this the false expression.
-    bool isFalse() const {
-        return (getWidth() == Expr::Bool && value.getBoolValue() == false);
-    }
-
-  /// isAllOnes - Is this constant all ones.
-    bool isAllOnes() const {
-        return getAPValue().isAllOnes();
-    }
-
-    ref<ConstantExpr> Not();
-};
-
-// FIXME: 
-class PhantomExpr : public ConstantExpr {
-public:
-    static const Kind kind = Expr::InvalidKind;
-};
-
-    // Implementations
-    inline bool Expr::isZero() const {
-    if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
-        return CE->isZero();
-    return false;
-    }
-    
-    inline bool Expr::isTrue() const {
-    assert(getWidth() == Expr::Bool && "Invalid isTrue() call!");
-    if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
-        return CE->isTrue();
-    return false;
-    }
-    
-    inline bool Expr::isFalse() const {
-    assert(getWidth() == Expr::Bool && "Invalid isFalse() call!");
-    if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
-        return CE->isFalse();
-    return false;
-    }
+inline bool Expr::isFalse() const {
+assert(getWidth() == Expr::Bool && "Invalid isFalse() call!");
+if (const ConstantExpr *CE = llvm::dyn_cast<ConstantExpr>(this))
+    return CE->isFalse();
+return false;
+}
 
 }
 
