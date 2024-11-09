@@ -93,7 +93,16 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             executeMemoryOperation(state, true, target, int32Value, 0);
         } else {
             // Deal with pointer, then fetch pointed and assign
-            ref<Expr> pointed = getValue(target, state);
+            Instruction *ptr = dyn_cast<Instruction>(value); assert(ptr);
+
+            // DEBUG INFO
+            llvm::errs() << "Pointer: " << *ptr << "\n";
+            // Now please interpret the Add Intruction, update its vlaue in the coresponding symbolic memory
+            // DEBUG INFO
+
+            ref<Expr> pointed = getValue(ptr, state);
+            assert(pointed && "No coresponding symblic value found for pointer!");
+
             executeMemoryOperation(state, true, target, pointed, 0);
         }
 
