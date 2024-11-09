@@ -81,14 +81,19 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
             assert(false && "Target is not an Instruction");
         // Retrieve the value to be stored
         llvm::Value *value = si->getValueOperand();
-        llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(value);
-        assert(ci && "ConstantInt expected");
-        assert(ci->getType()->isIntegerTy(32) && "Int32 expected");
 
-        int32_t rawInt32Value = static_cast<int32_t>(ci->getSExtValue());
-        ref<Expr> int32Value = ConstantExpr::alloc(rawInt32Value, Expr::Int32);
-
-        executeMemoryOperation(state, true, target, int32Value, 0);
+        if (llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(value)) {
+            // Deal with constant, just assign value
+            assert(ci->getType()->isIntegerTy(32) && "Int32 expected");
+            int32_t rawInt32Value = static_cast<int32_t>(ci->getSExtValue());
+            ref<ConstantExpr> int32Value = ConstantExpr::alloc(rawInt32Value, Expr::Int32);
+            executeMemoryOperation(state, true, target, int32Value, 0);
+        } else {
+            // Deal with pointer, then fetch pointed and assign
+            llvm::Instruction *i = llvm::cast<llvm::Instruction>(value);
+            ref<Expr> pointed = getValue(target, state);
+            executeMemoryOperation(state, true, target, pointed, 0);
+        }
 
         break;
     }
@@ -207,8 +212,7 @@ void Executor::executeAlloc(ExecutionState& state, unsigned size, llvm::Instruct
     state.locals.insert({inst, PhantomExpr::create(0, size)});
 }
 
-ref<Expr> Executor::getValue(llvm::Instruction* i, unsigned index, ExecutionState& state) {
-    assert(index < i->getNumOperands());
+ref<Expr> Executor::getValue(llvm::Instruction* i, ExecutionState& state) {
     return state.locals.find(i)->second;
 }
 
