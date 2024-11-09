@@ -28,6 +28,10 @@ private:
     void transferToBasicBlock(llvm::BasicBlock *dst, ExecutionState &state);
 
     void executeAlloc(ExecutionState& state, unsigned size, llvm::Instruction* inst);
+
+    ref<Expr> getValue(llvm::Instruction* i, unsigned index, ExecutionState& state);
+
+    void executeMemoryOperation(ExecutionState& state, bool isWrite, llvm::Instruction *address, ref<Expr> value, llvm::Instruction* i);
 };
 
 #endif // EXECUTOR_H

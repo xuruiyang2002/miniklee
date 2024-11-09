@@ -65,9 +65,26 @@ void Executor::executeInstruction(ExecutionState& state, llvm::Instruction* i) {
         llvm::errs() << "Load\n";
         break;
 
-    case llvm::Instruction::Store:
+    case llvm::Instruction::Store: {
         llvm::errs() << "Store\n";
+        llvm::StoreInst *si = llvm::cast<llvm::StoreInst>(i);
+        // Retrieve the target address
+        llvm::Instruction *target = llvm::dyn_cast<llvm::Instruction>(si->getOperand(1));
+        if (!target)
+            assert(false && "Target is not an Instruction");
+        // Retrieve the value to be stored
+        llvm::Value *value = si->getValueOperand();
+        llvm::ConstantInt *ci = llvm::dyn_cast<llvm::ConstantInt>(value);
+        assert(ci && "ConstantInt expected");
+        assert(ci->getType()->isIntegerTy(32) && "Int32 expected");
+
+        int32_t rawInt32Value = static_cast<int32_t>(ci->getSExtValue());
+        ref<Expr> int32Value = ConstantExpr::alloc(rawInt32Value, Expr::Int32);
+
+        executeMemoryOperation(state, true, target, int32Value, 0);
+
         break;
+    }
 
     case llvm::Instruction::Add:
         llvm::errs() << "Add\n";
@@ -181,4 +198,22 @@ void Executor::executeAlloc(ExecutionState& state, unsigned size, llvm::Instruct
     // WARNING: Dangling pointer?
     //          Maybe we should refactor the ConstantExpr to be more specific
     state.locals.insert({inst, PhantomExpr::create(0, size)});
+}
+
+ref<Expr> Executor::getValue(llvm::Instruction* i, unsigned index, ExecutionState& state) {
+    assert(index < i->getNumOperands());
+    return state.locals.find(i)->second;
+}
+
+
+void Executor::executeMemoryOperation(ExecutionState& state, 
+                            bool isWrite, 
+                            llvm::Instruction *address,
+                            ref<Expr> value, /* undef if read */
+                            llvm::Instruction* i /* undef if wirte*/) {
+    if (isWrite) { // Interpret the Store instruction
+        // WARNING: Check whether override the latent value?
+        state.locals.insert({address, value});
+    } else { // Interpret the Load instruction
+    }
 }
