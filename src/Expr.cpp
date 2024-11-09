@@ -61,7 +61,7 @@ unsigned NotExpr::computeHash() {
 void Expr::printWidth(llvm::raw_ostream &os, Width width) {
     switch(width) {
     case Expr::Bool: os << "Expr::Bool"; break;
-    case Expr::Int8: os << "Expr::Int8"; break;
+    case Expr::Int32: os << "Expr::Int32"; break;
     default: os << "<invalid type: " << (unsigned) width << ">";
     }
 }

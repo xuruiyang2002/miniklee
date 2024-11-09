@@ -17,7 +17,7 @@ public:
 
     // Currently only 8-bit integers are supported.
     static const Width Bool = 1;
-    static const Width Int8 = 8;
+    static const Width Int32 = 32;
 
     enum Kind {
         InvalidKind = -1,
