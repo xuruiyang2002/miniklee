@@ -242,6 +242,10 @@ void Executor::executeMemoryOperation(ExecutionState& state,
     if (isWrite) { // Interpret the Store instruction
         // WARNING: Check whether override the latent value?
         assert(!target);
+        auto it = state.locals.find(address);
+        if (it != state.locals.end()) {
+            state.locals.erase(it);
+        }
         state.locals.insert({address, value});
     } else { // Interpret the Load instruction
         assert(!value);
