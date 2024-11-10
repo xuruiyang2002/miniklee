@@ -95,14 +95,14 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             // Deal with pointer, then fetch pointed and assign
             Instruction *ptr = dyn_cast<Instruction>(value); assert(ptr);
 
-            // DEBUG INFO
-            llvm::errs() << "Pointer: " << *ptr << "\n";
-            // Now please interpret the Add Intruction, update its vlaue in the coresponding symbolic memory
-            // DEBUG INFO
-
             ref<Expr> pointed = getValue(ptr, state);
-            assert(pointed && "No coresponding symblic value found for pointer!");
 
+            // DEBUG INFO
+            // auto tmp = dyn_cast<miniklee::ConstantExpr>(pointed.get());
+            // errs() << "     DEBUG: ptr (" << *ptr << ") -> " << tmp->getAPValue().getSExtValue() << "\n";
+            // DEBUG INFO
+
+            assert(pointed && "No coresponding symblic value found for pointer!");
             executeMemoryOperation(state, true, target, pointed, 0);
         }
 
@@ -117,6 +117,11 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         //          What about symbolic?
         int32_t rawLshInt = getInt32Helper(state, ao->getOperand(0));
         int32_t rawRshInt = getInt32Helper(state, ao->getOperand(1));
+
+        // DEBUG INFO
+        // errs() << "     DEBUG: rawLshInt: " << rawLshInt << " rawRhsInt: " << rawRshInt << "\n";
+        // DEBUG INFO
+
 
         ref<miniklee::ConstantExpr> int32Value = miniklee::ConstantExpr::alloc(rawLshInt + rawRshInt, Expr::Int32);
         executeMemoryOperation(state, true, i /* simply the Load instr itself */, int32Value, 0);
@@ -208,6 +213,11 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             ref<miniklee::ConstantExpr> LhsValue = dyn_cast<miniklee::ConstantExpr>(rawLhsValue.get());
             assert(LhsValue && "Currently only support constant, TODO: symbolic value TBD");
 
+
+            // DEBUG INFO
+            // errs() << "     DEBUG: lhs: " << *lhs << "\n";
+            // DEBUG INFO
+
             Value *value = ii->getOperand(1);
             ConstantInt *ci = dyn_cast<ConstantInt>(value);
             // TODO: Support compare two Variables instead of one Variable and one Constant
@@ -215,6 +225,11 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
 
             // Now interpret the SLT's semantics
             int32_t cmpRes = LhsValue->getAPValue().getSExtValue() < ci->getSExtValue();
+
+            // DEBUG INFO
+            // errs() << "     DEBUG: LhsValue int: " << LhsValue->getAPValue().getSExtValue() << "\n";
+            // errs() << "     DEBUG: cmpRes: " << cmpRes << "\n";
+            // DEBUG INFO
 
             executeMemoryOperation(state, true, ii,
                 miniklee::ConstantExpr::create(cmpRes, Expr::Int32), 0);
@@ -291,8 +306,16 @@ void Executor::executeMemoryOperation(ExecutionState& state,
     } else { // Interpret the Load instruction
         assert(!value);
         // FIXME: Wrap a set of APIs
-        auto loadedValue = state.locals.find(address)->second;
-        state.locals.insert({target, loadedValue});
+        auto loadedValue = state.locals.find(address);
+        if (loadedValue == state.locals.end()) {
+            assert(false && "Unexpected Error");
+        } else {
+            auto it = state.locals.find(target);
+            if (it != state.locals.end()) {
+                state.locals.erase(it);
+            }
+            state.locals.insert({target, loadedValue->second});
+        }
     }
 }
 
