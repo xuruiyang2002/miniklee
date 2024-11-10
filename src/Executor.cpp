@@ -120,7 +120,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         ref<miniklee::ConstantExpr> lhsValue = dyn_cast<miniklee::ConstantExpr>(rawLshValue.get());
         assert(lhsValue && "TODO: Current only support ConstantValue, symbolic value TBD");
 
-        auto rawRshValue = getValue(lhs, state); assert(rawRshValue && "RHS Value Not Stored");
+        auto rawRshValue = getValue(rhs, state); assert(rawRshValue && "RHS Value Not Stored");
         ref<miniklee::ConstantExpr> rhsValue = dyn_cast<miniklee::ConstantExpr>(rawRshValue.get());
         assert(rhsValue && "TODO: Current only support ConstantValue, symbolic value TBD");
         // WARNING: So many cast functions, caution when there is dangling pointers
