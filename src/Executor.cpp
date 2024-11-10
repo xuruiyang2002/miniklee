@@ -44,12 +44,42 @@ void Executor::stepInstruction(ExecutionState& state) {
 
 void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     switch (i->getOpcode()) {
+    // Control flow
     case Instruction::Ret: {
         errs() << "Return\n";
         // // FIXME: Handle return
         stateStack.pop();
         break;
     }
+    case Instruction::Br: {
+        errs() << "Br\n";
+        BranchInst *bi = cast<BranchInst>(i);
+        if (bi->isUnconditional()) {
+            transferToBasicBlock(bi->getSuccessor(0), state);
+        } else {
+            assert(bi->getCondition() == bi->getOperand(0) &&
+                    "Wrong operand index!");
+            
+            // FIXME: Handle branches when involving symbolics
+            errs() << "Conditional Branch\n";
+            Instruction *cond = dyn_cast<Instruction>(bi->getCondition());
+            assert(cond);
+            ref<Expr> tmp = getValue(cond, state);
+            assert(tmp);
+            ref<miniklee::ConstantExpr> condValue = dyn_cast<miniklee::ConstantExpr>(tmp.get());
+            assert(condValue);
+            if (condValue->getAPValue().isZero()) {
+                transferToBasicBlock(bi->getSuccessor(1), state);
+            } else {
+                transferToBasicBlock(bi->getSuccessor(0), state);
+            }
+        }
+        break;
+    }
+    case Instruction::Call:
+        if (isa<DbgInfoIntrinsic>(i))
+            break;
+        assert(false && "Unknown call instruction");
 
     // Memory instructions...
     case Instruction::Alloca: {
@@ -109,6 +139,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         break;
     }
 
+    // Arithmetic
     case Instruction::Add: {
         errs() << "Add\n";
         BinaryOperator *ao = cast<BinaryOperator>(i);
@@ -122,51 +153,12 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         // errs() << "     DEBUG: rawLshInt: " << rawLshInt << " rawRhsInt: " << rawRshInt << "\n";
         // DEBUG INFO
 
-
         ref<miniklee::ConstantExpr> int32Value = miniklee::ConstantExpr::alloc(rawLshInt + rawRshInt, Expr::Int32);
         executeMemoryOperation(state, true, i /* simply the Load instr itself */, int32Value, 0);
         break;
     }
-    case Instruction::Br: {
-        errs() << "Br\n";
-        BranchInst *bi = cast<BranchInst>(i);
-        if (bi->isUnconditional()) {
-            transferToBasicBlock(bi->getSuccessor(0), state);
-        } else {
-            assert(bi->getCondition() == bi->getOperand(0) &&
-                    "Wrong operand index!");
-            
-            // // FIXME: Handle branches
-            errs() << "Conditional Branch\n";
-            // transferToBasicBlock(bi->getSuccessor(1), state);
 
-            // TODO: FIXME: uncomment me and fix me
-            Instruction *cond = dyn_cast<Instruction>(bi->getCondition());
-            assert(cond);
-            ref<Expr> tmp = getValue(cond, state);
-            assert(tmp);
-            ref<miniklee::ConstantExpr> condValue = dyn_cast<miniklee::ConstantExpr>(tmp.get());
-            assert(condValue);
-            if (condValue->getAPValue().isZero()) {
-            transferToBasicBlock(bi->getSuccessor(1), state);
-            } else {
-                transferToBasicBlock(bi->getSuccessor(0), state);
-            }
-
-
-            // ref<Expr> cond = eval(ki, 0, state).value;
-
-            // cond = optimizer.optimizeExpr(cond, false);
-            // Executor::StatePair branches = fork(state, cond, false, BranchType::Conditional);
-
-            // if (branches.first)
-            //     transferToBasicBlock(bi->getSuccessor(0), *branches.first);
-            // if (branches.second)
-            //     transferToBasicBlock(bi->getSuccessor(1), *branches.second);
-        }
-        break;
-    }
-
+    // Compare
     case Instruction::ICmp: {
         CmpInst *ci = cast<CmpInst>(i);
         ICmpInst *ii = cast<ICmpInst>(ci);
@@ -245,12 +237,6 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         }
         break;
     }
-
-
-    case Instruction::Call:
-        if (isa<DbgInfoIntrinsic>(i))
-            break;
-        assert(false && "Unknown call instruction");
     
     default:
         errs() << "Unknown instruction: " << *i << "\n";
