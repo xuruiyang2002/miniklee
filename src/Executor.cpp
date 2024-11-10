@@ -303,3 +303,17 @@ void Executor::executeMemoryOperation(ExecutionState& state,
         state.locals.insert({target, loadedValue});
     }
 }
+
+int32_t Executor::getInt32Helper(ExecutionState& state, Value* value) {
+    if (Instruction *v= dyn_cast<Instruction>(value)) {
+        ref<Expr> rawValue = getValue(v, state); assert(rawValue && "LHS Value Not Stored");
+        ref<miniklee::ConstantExpr> exprValue = dyn_cast<miniklee::ConstantExpr>(rawValue.get());
+        assert(exprValue && "TODO: Current only support ConstantValue, symbolic value TBD");
+        return static_cast<int32_t>(exprValue->getAPValue().getSExtValue());
+    } else if (ConstantInt *constValue = dyn_cast<ConstantInt>(value)) {
+        return static_cast<int32_t>(constValue->getSExtValue());
+    } else {
+        assert(false && "Unexpected Error");
+    }
+
+}

@@ -5,6 +5,8 @@
 #include <iostream>
 #include "ExecutionState.h"
 
+using namespace llvm;
+
 class Executor {
 public:
     std::unique_ptr<llvm::Module> module;
@@ -32,6 +34,8 @@ private:
     ref<Expr> getValue(llvm::Instruction* i, ExecutionState& state);
 
     void executeMemoryOperation(ExecutionState& state, bool isWrite, llvm::Instruction *address, ref<Expr> value, llvm::Instruction* i);
+
+    int32_t getInt32Helper(ExecutionState& state, Value* value /* ConstantInt* or Instruction* */);
 };
 
 #endif // EXECUTOR_H
