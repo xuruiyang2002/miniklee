@@ -116,8 +116,10 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         Instruction *lhs = cast<Instruction>(ao->getOperand(0));
         Instruction *rhs = cast<Instruction>(ao->getOperand(1));
 
-        ref<miniklee::ConstantExpr> lhsValue = cast<miniklee::ConstantExpr>(getValue(lhs, state).get());
-        ref<miniklee::ConstantExpr> rhsValue = cast<miniklee::ConstantExpr>(getValue(rhs, state).get());
+        ref<miniklee::ConstantExpr> lhsValue = dyn_cast<miniklee::ConstantExpr>(getValue(lhs, state).get());
+        assert(lhsValue && "TODO: Current only support ConstantValue, symbolic value TBD");
+        ref<miniklee::ConstantExpr> rhsValue = dyn_cast<miniklee::ConstantExpr>(getValue(rhs, state).get());
+        assert(rhsValue && "TODO: Current only support ConstantValue, symbolic value TBD");
         // WARNING: So many cast functions, caution when there is dangling pointers
         ref<miniklee::ConstantExpr> int32Value =
                 miniklee::ConstantExpr::alloc(static_cast<int32_t>(lhsValue->getAPValue().getSExtValue())
