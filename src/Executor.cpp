@@ -112,21 +112,13 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     case Instruction::Add: {
         errs() << "Add\n";
         BinaryOperator *ao = cast<BinaryOperator>(i);
-        // FIXME: Assume the two operands are the constant type
-        Instruction *lhs = cast<Instruction>(ao->getOperand(0));
-        Instruction *rhs = cast<Instruction>(ao->getOperand(1));
 
-        auto rawLshValue = getValue(lhs, state); assert(rawLshValue && "LHS Value Not Stored");
-        ref<miniklee::ConstantExpr> lhsValue = dyn_cast<miniklee::ConstantExpr>(rawLshValue.get());
-        assert(lhsValue && "TODO: Current only support ConstantValue, symbolic value TBD");
+        // FIXME: Assume the two operands are Variable and ConstantInt
+        //          What about symbolic?
+        int32_t rawLshInt = getInt32Helper(state, ao->getOperand(0));
+        int32_t rawRshInt = getInt32Helper(state, ao->getOperand(1));
 
-        auto rawRshValue = getValue(rhs, state); assert(rawRshValue && "RHS Value Not Stored");
-        ref<miniklee::ConstantExpr> rhsValue = dyn_cast<miniklee::ConstantExpr>(rawRshValue.get());
-        assert(rhsValue && "TODO: Current only support ConstantValue, symbolic value TBD");
-        // WARNING: So many cast functions, caution when there is dangling pointers
-        ref<miniklee::ConstantExpr> int32Value =
-                miniklee::ConstantExpr::alloc(static_cast<int32_t>(lhsValue->getAPValue().getSExtValue())
-                                            + static_cast<int32_t>(rhsValue->getAPValue().getSExtValue()), Expr::Int32);
+        ref<miniklee::ConstantExpr> int32Value = miniklee::ConstantExpr::alloc(rawLshInt + rawRshInt, Expr::Int32);
         executeMemoryOperation(state, true, i /* simply the Load instr itself */, int32Value, 0);
         break;
     }
