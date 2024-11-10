@@ -109,10 +109,22 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         break;
     }
 
-    case Instruction::Add:
+    case Instruction::Add: {
         errs() << "Add\n";
-        break;
+        BinaryOperator *ao = cast<BinaryOperator>(i);
+        // FIXME: Assume the two operands are the constant type
+        Instruction *lhs = cast<Instruction>(ao->getOperand(0));
+        Instruction *rhs = cast<Instruction>(ao->getOperand(1));
 
+        ref<miniklee::ConstantExpr> lhsValue = cast<miniklee::ConstantExpr>(getValue(lhs, state).get());
+        ref<miniklee::ConstantExpr> rhsValue = cast<miniklee::ConstantExpr>(getValue(rhs, state).get());
+        // WARNING: So many cast functions, caution when there is dangling pointers
+        ref<miniklee::ConstantExpr> int32Value =
+                miniklee::ConstantExpr::alloc(static_cast<int32_t>(lhsValue->getAPValue().getSExtValue())
+                                            + static_cast<int32_t>(rhsValue->getAPValue().getSExtValue()), Expr::Int32);
+        executeMemoryOperation(state, true, i /* simply the Load instr itself */, int32Value, 0);
+        break;
+    }
     case Instruction::Br: {
         errs() << "Br\n";
         BranchInst *bi = cast<BranchInst>(i);
