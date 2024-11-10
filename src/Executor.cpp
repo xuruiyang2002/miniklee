@@ -195,6 +195,24 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         }
         case ICmpInst::ICMP_SLT: {
             errs() << "ICMP_SLT comparison\n";
+            // FIXME: Handle symbolic value instead of just constant value
+            Instruction *lhs = cast<Instruction>(ii->getOperand(0));
+            ref<Expr> rawLhsValue = getValue(lhs, state);
+            assert(rawLhsValue && "LHS Value Not Stored");
+            ref<miniklee::ConstantExpr> LhsValue = dyn_cast<miniklee::ConstantExpr>(rawLhsValue.get());
+            assert(LhsValue && "Currently only support constant, TODO: symbolic value TBD");
+
+            Value *value = ii->getOperand(1);
+            ConstantInt *ci = dyn_cast<ConstantInt>(value);
+            // TODO: Support compare two Variables instead of one Variable and one Constant
+            assert(value && "Support constant value to be compared only. e.g., SLT <Variable> <Constant>");
+
+            // Now interpret the SLT's semantics
+            int32_t cmpRes = LhsValue->getAPValue().getSExtValue() < ci->getSExtValue();
+
+            executeMemoryOperation(state, true, ii,
+                miniklee::ConstantExpr::create(cmpRes, Expr::Int32), 0);
+
             break;
         }
         case ICmpInst::ICMP_SLE: {
