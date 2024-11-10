@@ -141,7 +141,21 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             
             // // FIXME: Handle branches
             errs() << "Conditional Branch\n";
+            // transferToBasicBlock(bi->getSuccessor(1), state);
+
+            // TODO: FIXME: uncomment me and fix me
+            Instruction *cond = dyn_cast<Instruction>(bi->getCondition());
+            assert(cond);
+            ref<Expr> tmp = getValue(cond, state);
+            assert(tmp);
+            ref<miniklee::ConstantExpr> condValue = dyn_cast<miniklee::ConstantExpr>(tmp.get());
+            assert(condValue);
+            if (condValue->getAPValue().isZero()) {
             transferToBasicBlock(bi->getSuccessor(1), state);
+            } else {
+                transferToBasicBlock(bi->getSuccessor(0), state);
+            }
+
 
             // ref<Expr> cond = eval(ki, 0, state).value;
 
