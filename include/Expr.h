@@ -246,7 +246,7 @@ public:                                                                      \
     res->computeHash();                                                      \
     return res;                                                              \
     }                                                                          \
-    static ref<Expr> create(const ref<Expr> &l, const ref<Expr> &r);           \
+    static ref<Expr> create(const ref<Expr> l, const ref<Expr> r);           \
     Kind getKind() const { return _class_kind; }                               \
     virtual ref<Expr> rebuild(ref<Expr> kids[]) const {                        \
     return create(kids[0], kids[1]);                                         \
