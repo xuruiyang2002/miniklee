@@ -6,15 +6,24 @@
 #include "Executor.h"
 
 int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <path_to_LLVM_IR_file>\n";
+        return 1;
+    }
+
+    // Get the file path from user input
+    const char* filePath = argv[1];
     llvm::LLVMContext context;
     llvm::SMDiagnostic err;
 
     // Load the LLVM IR file
-    auto module = llvm::parseIRFile("./test/example.ll", err, context);
+    auto module = llvm::parseIRFile(filePath, err, context);
     if (!module) {
         err.print(argv[0], llvm::errs());
         return 1;
     }
+    std::cout << "\033[1;32mLLVM IR file loaded successfully.\033[0m\n";
+
 
     // Create the executor to interpret the program
     Executor executor(std::move(module));
