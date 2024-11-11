@@ -212,34 +212,11 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         }
         case ICmpInst::ICMP_SLT: {
             errs() << "ICMP_SLT comparison\n";
-            // FIXME: Handle symbolic value instead of just constant value
-            Instruction *lhs = cast<Instruction>(ii->getOperand(0));
-            ref<Expr> rawLhsValue = getInstructionValue(state, lhs);
-            assert(rawLhsValue && "LHS Value Not Stored");
-            ref<miniklee::ConstantExpr> LhsValue = dyn_cast<miniklee::ConstantExpr>(rawLhsValue.get());
-            assert(LhsValue && "Currently only support constant, TODO: symbolic value TBD");
+            ref<Expr> lshValue = getValue(state, ii->getOperand(0));
+            ref<Expr> rshValue = getValue(state, ii->getOperand(1));
+            ref<Expr> slt = SltExpr::create(lshValue, rshValue);
 
-
-            // DEBUG INFO
-            // errs() << "     DEBUG: lhs: " << *lhs << "\n";
-            // DEBUG INFO
-
-            Value *value = ii->getOperand(1);
-            ConstantInt *ci = dyn_cast<ConstantInt>(value);
-            // TODO: Support compare two Variables instead of one Variable and one Constant
-            assert(value && "Support constant value to be compared only. e.g., SLT <Variable> <Constant>");
-
-            // Now interpret the SLT's semantics
-            int32_t cmpRes = LhsValue->getAPValue().getSExtValue() < ci->getSExtValue();
-
-            // DEBUG INFO
-            // errs() << "     DEBUG: LhsValue int: " << LhsValue->getAPValue().getSExtValue() << "\n";
-            // errs() << "     DEBUG: cmpRes: " << cmpRes << "\n";
-            // DEBUG INFO
-
-            executeMemoryOperation(state, true, ii,
-                miniklee::ConstantExpr::create(cmpRes, Expr::Int32), 0);
-
+            executeMemoryOperation(state, true, ii, slt, 0);
             break;
         }
         case ICmpInst::ICMP_SLE: {
@@ -322,7 +299,7 @@ void Executor::executeMemoryOperation(ExecutionState& state,
 ref<Expr> Executor::getValue(ExecutionState& state, Value* value) {
     if (Instruction *v= dyn_cast<Instruction>(value)) {
         ref<Expr> rawValue = getInstructionValue(state, v);
-        assert(rawValue && "LHS Value Not Stored");
+        assert(rawValue && "Value Not Stored");
         return rawValue;
     } else if (ConstantInt *constValue = dyn_cast<ConstantInt>(value)) {
         return miniklee::ConstantExpr::create(
