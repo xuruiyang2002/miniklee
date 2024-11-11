@@ -35,9 +35,10 @@ private:
 
     void executeMemoryOperation(ExecutionState& state, bool isWrite, llvm::Instruction *address, ref<Expr> value, llvm::Instruction* i);
 
-    int32_t getInt32Helper(ExecutionState& state, Value* value /* ConstantInt* or Instruction* */);
+    ref<Expr> getValue(ExecutionState& state, Value* value /* ConstantInt* or Instruction* */);
         
     void executeMakeSymbolic(ExecutionState& state, Instruction *sym, std::string name);
+
 };
 
 #endif // EXECUTOR_H

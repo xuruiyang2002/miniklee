@@ -164,13 +164,11 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         errs() << "Add\n";
         BinaryOperator *ao = cast<BinaryOperator>(i);
 
-        // FIXME: Assume the two operands are Variable and ConstantInt
-        //          What about symbolic?
-        int32_t rawLshInt = getInt32Helper(state, ao->getOperand(0));
-        int32_t rawRshInt = getInt32Helper(state, ao->getOperand(1));
+        ref<Expr> lshValue = getValue(state, ao->getOperand(0));
+        ref<Expr> rshValue = getValue(state, ao->getOperand(1));
+        ref<Expr> add = AddExpr::create(lshValue, rshValue);
 
-        ref<miniklee::ConstantExpr> int32Value = miniklee::ConstantExpr::alloc(rawLshInt + rawRshInt, Expr::Int32);
-        executeMemoryOperation(state, true, i /* simply the Load instr itself */, int32Value, 0);
+        executeMemoryOperation(state, true, i /* simply the Load instr itself */, add, 0);
         break;
     }
 
@@ -321,19 +319,15 @@ void Executor::executeMemoryOperation(ExecutionState& state,
     }
 }
 
-int32_t Executor::getInt32Helper(ExecutionState& state, Value* value) {
+ref<Expr> Executor::getValue(ExecutionState& state, Value* value) {
     if (Instruction *v= dyn_cast<Instruction>(value)) {
-        ref<Expr> rawValue = getInstructionValue(state, v); assert(rawValue && "LHS Value Not Stored");
-
-        // DEBUG INFO
-        errs() << "     DEBUG: type is " << rawValue->getKind() << "\n";
-        // DEBUG INFO
-
-        ref<miniklee::ConstantExpr> exprValue = dyn_cast<miniklee::ConstantExpr>(rawValue.get());
-        assert(exprValue && "TODO: Current only support ConstantValue, symbolic value TBD");
-        return static_cast<int32_t>(exprValue->getAPValue().getSExtValue());
+        ref<Expr> rawValue = getInstructionValue(state, v);
+        assert(rawValue && "LHS Value Not Stored");
+        return rawValue;
     } else if (ConstantInt *constValue = dyn_cast<ConstantInt>(value)) {
-        return static_cast<int32_t>(constValue->getSExtValue());
+        return miniklee::ConstantExpr::create(
+            static_cast<int32_t>(constValue->getSExtValue()),
+            Expr::Int32);
     } else {
         assert(false && "Unexpected Error");
     }
