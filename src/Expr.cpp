@@ -99,3 +99,20 @@ ref<Expr> NotExpr::create(const ref<Expr> e) {
     
     return NotExpr::alloc(e);
 }
+
+ref<Expr> AddExpr::create(const ref<Expr> l, const ref<Expr> r) {
+    // Mistmatch allowed for symbolic 
+    // assert(l->getKind() == r->getKind() && "type mismatch");
+    auto *probeLhs = dyn_cast<ConstantExpr>(l.get());
+    auto probeRhs = dyn_cast<ConstantExpr>(r.get());
+
+    if (probeLhs && probeRhs) {
+        return ConstantExpr::create(
+            probeLhs->getAPValue().getSExtValue() + probeRhs->getAPValue().getSExtValue(),
+            Expr::Int32
+        );
+    }
+    
+    return AddExpr::alloc(l, r);
+}
+
