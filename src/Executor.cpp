@@ -67,7 +67,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             ref<Expr> tmp = getValue(cond, state);
             assert(tmp);
             ref<miniklee::ConstantExpr> condValue = dyn_cast<miniklee::ConstantExpr>(tmp.get());
-            assert(condValue);
+            assert(condValue && "TODO: Current only support ConstantValue, symbolic value TBD");
             if (condValue->getAPValue().isZero()) {
                 transferToBasicBlock(bi->getSuccessor(1), state);
             } else {
