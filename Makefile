@@ -19,14 +19,17 @@ $(EXEC): $(OBJS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+EXEC=my_program
+SRC ?= ./test/loop.c
+OUT ?= ./test/loop.ll
+
+run:
+	clang -emit-llvm -g -S $(SRC) -o $(OUT)
+	./$(EXEC) $(OUT)
+
 # Clean up
 clean:
-	rm -f $(OBJS) $(EXEC)
-
-# Run test
-run:
-	clang -emit-llvm -g -S ./test/example.c -o ./test/example.ll
-	./$(EXEC)
+	rm -f $(OBJS) $(EXEC) $(OUT)
 
 line:
 	find . -type f \( -name "*.cpp" -o -name "*.h" \) -exec wc -l {} +
