@@ -31,7 +31,7 @@ private:
 
     void executeAlloc(ExecutionState& state, unsigned size, llvm::Instruction* inst);
 
-    ref<Expr> getValue(llvm::Instruction* i, ExecutionState& state);
+    ref<Expr> getInstructionValue(ExecutionState& state, llvm::Instruction* i);
 
     void executeMemoryOperation(ExecutionState& state, bool isWrite, llvm::Instruction *address, ref<Expr> value, llvm::Instruction* i);
 

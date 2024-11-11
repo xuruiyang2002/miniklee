@@ -64,7 +64,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             errs() << "Conditional Branch\n";
             Instruction *cond = dyn_cast<Instruction>(bi->getCondition());
             assert(cond);
-            ref<Expr> tmp = getValue(cond, state);
+            ref<Expr> tmp = getInstructionValue(state, cond);
             assert(tmp);
             ref<miniklee::ConstantExpr> condValue = dyn_cast<miniklee::ConstantExpr>(tmp.get());
             assert(condValue && "TODO: Current only support ConstantValue, symbolic value TBD");
@@ -88,12 +88,6 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         // 1. Make symbolic
         Instruction *sym = dyn_cast<Instruction>(cb->getArgOperand(0));
         assert(sym && "First argument should be a variable (Instruction type)");
-
-            errs() << "Call " << "\n";
-        for (int i = 0; i < cb->arg_size(); i++) {
-            Value *arg = cb->getOperand(i);
-            errs() << *arg << "\n";
-        }
 
         // 2. Deal with the size (4 bytes)
         ConstantInt *size = dyn_cast<ConstantInt>(cb->getArgOperand(1));
@@ -156,7 +150,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         } else {
             // Deal with pointer, then fetch pointed and assign
             Instruction *ptr = dyn_cast<Instruction>(value); assert(ptr);
-            ref<Expr> pointed = getValue(ptr, state);
+            ref<Expr> pointed = getInstructionValue(state, ptr);
 
             assert(pointed && "No coresponding symblic value found for pointer!");
             executeMemoryOperation(state, true, target, pointed, 0);
@@ -174,10 +168,6 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         //          What about symbolic?
         int32_t rawLshInt = getInt32Helper(state, ao->getOperand(0));
         int32_t rawRshInt = getInt32Helper(state, ao->getOperand(1));
-
-        // DEBUG INFO
-        // errs() << "     DEBUG: rawLshInt: " << rawLshInt << " rawRhsInt: " << rawRshInt << "\n";
-        // DEBUG INFO
 
         ref<miniklee::ConstantExpr> int32Value = miniklee::ConstantExpr::alloc(rawLshInt + rawRshInt, Expr::Int32);
         executeMemoryOperation(state, true, i /* simply the Load instr itself */, int32Value, 0);
@@ -226,7 +216,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             errs() << "ICMP_SLT comparison\n";
             // FIXME: Handle symbolic value instead of just constant value
             Instruction *lhs = cast<Instruction>(ii->getOperand(0));
-            ref<Expr> rawLhsValue = getValue(lhs, state);
+            ref<Expr> rawLhsValue = getInstructionValue(state, lhs);
             assert(rawLhsValue && "LHS Value Not Stored");
             ref<miniklee::ConstantExpr> LhsValue = dyn_cast<miniklee::ConstantExpr>(rawLhsValue.get());
             assert(LhsValue && "Currently only support constant, TODO: symbolic value TBD");
@@ -291,7 +281,7 @@ void Executor::executeAlloc(ExecutionState& state, unsigned size, Instruction* i
     state.locals.insert({inst, miniklee::InvalidKindExpr::create(0, size)});
 }
 
-ref<Expr> Executor::getValue(Instruction* i, ExecutionState& state) {
+ref<Expr> Executor::getInstructionValue(ExecutionState& state, Instruction* i) {
     // return state.locals.find(i)->second;
     auto it = state.locals.find(i);
     if (it != state.locals.end()) {
@@ -333,7 +323,12 @@ void Executor::executeMemoryOperation(ExecutionState& state,
 
 int32_t Executor::getInt32Helper(ExecutionState& state, Value* value) {
     if (Instruction *v= dyn_cast<Instruction>(value)) {
-        ref<Expr> rawValue = getValue(v, state); assert(rawValue && "LHS Value Not Stored");
+        ref<Expr> rawValue = getInstructionValue(state, v); assert(rawValue && "LHS Value Not Stored");
+
+        // DEBUG INFO
+        errs() << "     DEBUG: type is " << rawValue->getKind() << "\n";
+        // DEBUG INFO
+
         ref<miniklee::ConstantExpr> exprValue = dyn_cast<miniklee::ConstantExpr>(rawValue.get());
         assert(exprValue && "TODO: Current only support ConstantValue, symbolic value TBD");
         return static_cast<int32_t>(exprValue->getAPValue().getSExtValue());
