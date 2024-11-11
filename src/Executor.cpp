@@ -135,13 +135,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         } else {
             // Deal with pointer, then fetch pointed and assign
             Instruction *ptr = dyn_cast<Instruction>(value); assert(ptr);
-
             ref<Expr> pointed = getValue(ptr, state);
-
-            // DEBUG INFO
-            // auto tmp = dyn_cast<miniklee::ConstantExpr>(pointed.get());
-            // errs() << "     DEBUG: ptr (" << *ptr << ") -> " << tmp->getAPValue().getSExtValue() << "\n";
-            // DEBUG INFO
 
             assert(pointed && "No coresponding symblic value found for pointer!");
             executeMemoryOperation(state, true, target, pointed, 0);
