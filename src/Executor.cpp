@@ -85,10 +85,31 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
                 && "Unknown call instruction");
         assert(cb->arg_size()  == 3 && "Unexpected Error");
 
-        // Make symbolic
+        // 1. Make symbolic
         Instruction *sym = dyn_cast<Instruction>(cb->getArgOperand(0));
         assert(sym && "First argument should be a variable (Instruction type)");
-        executeMakeSymbolic(state, sym);
+
+            errs() << "Call " << "\n";
+        for (int i = 0; i < cb->arg_size(); i++) {
+            Value *arg = cb->getOperand(i);
+            errs() << *arg << "\n";
+        }
+
+        // 2. Deal with the size (4 bytes)
+        ConstantInt *size = dyn_cast<ConstantInt>(cb->getArgOperand(1));
+        assert(size->getSExtValue() == Expr::Int32 / CHAR_BIT);
+
+        // 3. Retrieve the name
+        Value *arg = cb->getArgOperand(2); 
+        // GEP constant expression
+        auto *gepExpr = cast<llvm::ConstantExpr>(arg);
+        assert(gepExpr->getOpcode() == llvm::Instruction::GetElementPtr && "GEP Expected");
+        // Get the global variable
+        auto *globalVar = cast<GlobalVariable>(gepExpr->getOperand(0));
+        auto *strArray = cast<ConstantDataArray>(globalVar->getInitializer());
+        assert(strArray->isString() && "String Expected");
+
+        executeMakeSymbolic(state, sym, strArray->getAsString().str());
 
         break;
     }
@@ -322,4 +343,9 @@ int32_t Executor::getInt32Helper(ExecutionState& state, Value* value) {
         assert(false && "Unexpected Error");
     }
 
+}
+
+void Executor::executeMakeSymbolic(ExecutionState& state, Instruction *symAddress, std::string name) {
+    // Register the variable (Instruction type) to be symbolic
+    executeMemoryOperation(state, true, symAddress, SymbolicExpr::create(name), 0);
 }

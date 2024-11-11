@@ -65,6 +65,16 @@ unsigned InvalidKindExpr::computeHash() {
     return hashValue;
 }
 
+unsigned SymbolicExpr::computeHash() {
+    Expr::Width w = getWidth();
+
+    // Hash the string using std::hash and combine with MAGIC_HASH_CONSTANT
+    std::hash<std::string> hashFn;
+    hashValue = hashFn(name) ^ (w * MAGIC_HASH_CONSTANT);
+
+    return hashValue;
+}
+
 unsigned NotExpr::computeHash() {
     hashValue = expr->hash() * Expr::MAGIC_HASH_CONSTANT * Expr::Not;
     return hashValue;

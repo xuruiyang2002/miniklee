@@ -21,10 +21,11 @@ public:
     static const Width Int32 = 32;
 
     enum Kind {
-        InvalidKind = -1,
+        InvalidKind = -2,
 
         // Primitive
         
+        Symbolic = -1,
         Constant = 0,
 
         // Bit
@@ -338,6 +339,53 @@ public:\
 
 TERMINAL_EXPR_CLASS(Constant)
 TERMINAL_EXPR_CLASS(InvalidKind)
+
+class SymbolicExpr: public Expr {
+public: static
+    const Kind kind = Symbolic;
+    static const unsigned numKids = 0;
+
+private:
+    const std::string name;
+
+    SymbolicExpr(std::string n): name(n) {}
+
+    public: ~SymbolicExpr() {}
+
+    Kind getKind() const { return Symbolic; }
+    
+    unsigned getNumKids() const { return 0; }
+
+    Width getWidth() const { return Int32; }
+
+    ref <Expr> getKid(unsigned i) const {
+        return 0;
+    }
+
+    const std::string getName() const { return name; }
+
+    virtual unsigned computeHash();
+    
+    static ref<SymbolicExpr> alloc(std::string n) {
+        ref <SymbolicExpr> r(new SymbolicExpr(n));
+        r -> computeHash();
+        return r;
+    }
+
+    static ref< SymbolicExpr > create(std::string n) {
+        return alloc(n);
+    }
+
+    static bool classof(const Expr * E) {
+        return E -> getKind() == Expr::Symbolic;
+    }
+
+    static bool classof(const SymbolicExpr * ) { return true; }
+
+    bool isZero() const { return false; }
+    bool isTrue() const { return true; }
+    bool isFalse() const { return false; }
+};
 
 // Implementations
 inline bool Expr::isZero() const {
