@@ -76,11 +76,22 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         }
         break;
     }
-    case Instruction::Call:
+    case Instruction::Call: {
         if (isa<DbgInfoIntrinsic>(i))
             break;
-        assert(false && "Unknown call instruction");
 
+        const CallBase *cb = cast<CallBase>(i);
+        assert(cb->getCalledFunction()->getName() == "make_symbolic"
+                && "Unknown call instruction");
+        assert(cb->arg_size()  == 3 && "Unexpected Error");
+
+        // Make symbolic
+        Instruction *sym = dyn_cast<Instruction>(cb->getArgOperand(0));
+        assert(sym && "First argument should be a variable (Instruction type)");
+        executeMakeSymbolic(state, sym);
+
+        break;
+    }
     // Memory instructions...
     case Instruction::Alloca: {
         // TODO: remove debug info
