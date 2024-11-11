@@ -19,8 +19,8 @@ $(EXEC): $(OBJS)
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-SRC ?= ./test/symbolic.c
-OUT ?= ./test/symbolic.ll
+SRC ?= ./test/constraint.c
+OUT ?= ./test/constraint.ll
 
 run:
 	clang -emit-llvm -g -S $(SRC) -o $(OUT)
