@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Expr.h"
+#include "Constraints.h"
 
 using namespace miniklee;
 
@@ -28,7 +29,7 @@ public:
     std::unordered_map<const llvm::Value*, ref<Expr>> locals;
 
     // Path constraints collected so far
-    std::vector<std::string> pathConstraints;
+    ConstraintSet constraints;
 
 public:
     ExecutionState() {}
@@ -38,8 +39,6 @@ public:
 
     ExecutionState(const ExecutionState& state);
 
-    // Add path constraints to the current control flow
-    void addConstraint(const std::string& constraint);
 };
 
 #endif // EXECUTIONSTATE_H

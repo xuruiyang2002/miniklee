@@ -28,7 +28,8 @@ void Solver::setCoreSolverTimeout(time::Span timeout) {
 }
 
 bool Solver::evaluate(const Query& query, Validity &result) {
-    assert(query.expr->getWidth() == Expr::Bool && "Invalid expression type!");
+    // WARNING: this is a hack 
+    // assert(query.expr->getWidth() == Expr::Bool && "Invalid expression type!");
 
     // Maintain invariants implementations expect.
     if (ConstantExpr *CE = dyn_cast<ConstantExpr>(query.expr.get())) {

@@ -17,7 +17,7 @@ using namespace miniklee;
 
 Executor::Executor(std::unique_ptr<llvm::Module> module) 
     : module(std::move(module)) {
-    this->solver =  createCoreSolver(CoreSolverType::DUMMY_SOLVER);
+    this->solver = createCoreSolver(CoreSolverType::DUMMY_SOLVER);
 }
 
 void Executor::runFunctionAsMain(Function *function) {
@@ -320,5 +320,28 @@ void Executor::executeMakeSymbolic(ExecutionState& state, Instruction *symAddres
 Executor::StatePair Executor::fork(ExecutionState &current,
                                     ref<Expr> condition) {
     // TODO: Invoke solver to determinie the feasibility of the condition
-    return StatePair(nullptr, &current);
+    Solver::Validity res;
+    bool success = this->solver->evaluate(Query(current.constraints, condition), res);
+    if (!success) {
+        current.pc = current.prevPC;
+        // TODO: Use terminte to exit elegently
+        errs() << (false && "Query timed out (fork)");
+        return StatePair(nullptr, nullptr);
+    }
+
+    // TODO: remove debug info
+    // errs() << "DEBUG: success is " << success << ", res is " << res << "\n";
+    if (res == Solver::True) {
+        return StatePair(&current, nullptr);
+    } else if (res == Solver::False) {
+        return StatePair(nullptr, &current);
+    } else {
+        // ExecutionState *falseState, *trueState = &current;
+        // falseState = trueState->branch();
+        // addedStates.push_back(falseState);
+        // addConstraint(*trueState, condition);
+        // addConstraint(*falseState, Expr::createIsZero(condition));
+        // return StatePair(trueState, falseState);
+        assert(false && "Not implement yet");
+    }
 }

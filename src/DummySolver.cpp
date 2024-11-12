@@ -22,7 +22,8 @@ public:
 DummySolverImpl::DummySolverImpl() {}
 
 bool DummySolverImpl::computeValidity(const Query &, Solver::Validity &result) {
-    return false;
+    result = Solver::False;
+    return true;
 }
 
 bool DummySolverImpl::computeTruth(const Query &, bool &isValid) {

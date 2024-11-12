@@ -14,9 +14,4 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     pc(state.pc),
     prevPC(state.prevPC),
     locals(state.locals),
-    pathConstraints(state.pathConstraints){ }
-
-
-void ExecutionState::addConstraint(const std::string& constraint) {
-    pathConstraints.push_back(constraint);
-}
+    constraints(state.constraints) {}
