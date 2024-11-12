@@ -4,12 +4,15 @@
 #include <stack>
 #include <iostream>
 #include "ExecutionState.h"
+#include "Solver.h"
 
 using namespace llvm;
 
 class Executor {
 public:
     std::unique_ptr<llvm::Module> module;
+    
+    std::unique_ptr<Solver> solver;
 
     std::stack<ExecutionState> stateStack;
 
@@ -18,8 +21,7 @@ public:
     void runFunctionAsMain(llvm::Function* function);
 
     // Constructor that accepts an llvm::Module pointer
-    explicit Executor(std::unique_ptr<llvm::Module> module) 
-        : module(std::move(module)) {}
+    explicit Executor(std::unique_ptr<llvm::Module> module);
 
 private:
 

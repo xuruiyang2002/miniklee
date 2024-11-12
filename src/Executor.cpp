@@ -15,6 +15,11 @@
 using namespace llvm;
 using namespace miniklee;
 
+Executor::Executor(std::unique_ptr<llvm::Module> module) 
+    : module(std::move(module)) {
+    this->solver =  createCoreSolver(CoreSolverType::DUMMY_SOLVER);
+}
+
 void Executor::runFunctionAsMain(Function *function) {
     ExecutionState initialState(function);
     stateStack.push(initialState);

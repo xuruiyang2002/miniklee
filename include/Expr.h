@@ -73,6 +73,9 @@ public:
     virtual unsigned getNumKids() const = 0;
     virtual ref<Expr> getKid(unsigned i) const = 0;
 
+    /// dump - Print the expression to stderr.
+    void dump() const;
+
     // TODO: Construct debug components such as print and dump
     //      to make develop life easier ?
     // virtual void print(llvm::raw_ostream& os) const;

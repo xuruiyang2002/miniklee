@@ -45,8 +45,9 @@ namespace miniklee {
         return withExpr(Expr::createIsZero(expr));
     }
 
+    // FIXME: Not implement yet
     /// Dump query
-    void dump() const ;
+    // void dump() const ;
     };
 
     class Solver {
