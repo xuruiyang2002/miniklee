@@ -95,6 +95,8 @@ public:
     /// isFalse - Is this the false expression.
     bool isFalse() const;
 
+    static ref<Expr> createIsZero(ref<Expr> e);
+
     static void printKind(llvm::raw_ostream& os, Kind k);
     static void printWidth(llvm::raw_ostream& os, Width w);
 

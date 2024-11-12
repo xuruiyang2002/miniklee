@@ -128,3 +128,20 @@ ref<Expr> SltExpr::create(const ref<Expr> l, const ref<Expr> r) {
     return SltExpr::alloc(l, r);
 }
 
+ref<Expr> EqExpr::create(const ref<Expr> l, const ref<Expr> r) {
+    auto probeLhs = dyn_cast<ConstantExpr>(l.get());
+    auto probeRhs = dyn_cast<ConstantExpr>(r.get());
+
+    if (probeLhs && probeRhs) {
+        return ConstantExpr::create(
+            probeLhs->getAPValue().getSExtValue() == probeRhs->getAPValue().getSExtValue(),
+            Expr::Int32
+        );
+    }
+    
+    return EqExpr::alloc(l, r);
+}
+
+ref<Expr> Expr::createIsZero(ref<Expr> e) {
+    return EqExpr::create(e, ConstantExpr::create(0, e->getWidth()));
+}
