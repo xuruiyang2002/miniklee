@@ -13,6 +13,8 @@ public:
 
     std::stack<ExecutionState> stateStack;
 
+    typedef std::pair<ExecutionState*,ExecutionState*> StatePair;
+
     void runFunctionAsMain(llvm::Function* function);
 
     // Constructor that accepts an llvm::Module pointer
@@ -38,6 +40,8 @@ private:
     ref<Expr> getValue(ExecutionState& state, Value* value /* ConstantInt* or Instruction* */);
         
     void executeMakeSymbolic(ExecutionState& state, Instruction *sym, std::string name);
+
+    StatePair fork(ExecutionState &current, ref<Expr> condition);
 
 };
 

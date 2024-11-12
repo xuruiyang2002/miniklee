@@ -60,19 +60,14 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             assert(bi->getCondition() == bi->getOperand(0) &&
                     "Wrong operand index!");
             
-            // FIXME: Handle branches when involving symbolics
-            errs() << "Conditional Branch\n";
-            Instruction *cond = dyn_cast<Instruction>(bi->getCondition());
-            assert(cond);
-            ref<Expr> tmp = getInstructionValue(state, cond);
-            assert(tmp);
-            ref<miniklee::ConstantExpr> condValue = dyn_cast<miniklee::ConstantExpr>(tmp.get());
-            assert(condValue && "TODO: Current only support ConstantValue, symbolic value TBD");
-            if (condValue->getAPValue().isZero()) {
-                transferToBasicBlock(bi->getSuccessor(1), state);
-            } else {
-                transferToBasicBlock(bi->getSuccessor(0), state);
-            }
+            Instruction *condInstr = dyn_cast<Instruction>(bi->getCondition()); assert(condInstr);
+            ref<Expr> cond = getInstructionValue(state, condInstr); assert(cond);
+
+            Executor::StatePair branches = fork(state, cond);
+            if (branches.first)
+                transferToBasicBlock(bi->getSuccessor(0), *branches.first);
+            if (branches.second)
+                transferToBasicBlock(bi->getSuccessor(1), *branches.second);
         }
         break;
     }
@@ -314,4 +309,11 @@ ref<Expr> Executor::getValue(ExecutionState& state, Value* value) {
 void Executor::executeMakeSymbolic(ExecutionState& state, Instruction *symAddress, std::string name) {
     // Register the variable (Instruction type) to be symbolic
     executeMemoryOperation(state, true, symAddress, SymbolicExpr::create(name), 0);
+}
+
+
+Executor::StatePair Executor::fork(ExecutionState &current,
+                                    ref<Expr> condition) {
+    // TODO: Invoke solver to determinie the feasibility of the condition
+    return StatePair(nullptr, &current);
 }
