@@ -55,6 +55,7 @@
         "map": "cpp",
         "ratio": "cpp",
         "regex": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "csignal": "cpp"
     }
 }
