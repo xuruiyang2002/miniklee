@@ -1,3 +1,5 @@
+#ifdef ENABLE_Z3
+
 #ifndef Z3SOLVER_H
 #define Z3SOLVER_H
 
@@ -21,3 +23,5 @@ public:
 }
 
 #endif /* Z3SOLVER_H */
+
+#endif // ENABLE_Z3

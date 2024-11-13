@@ -1,3 +1,5 @@
+#ifdef ENABLE_Z3
+
 #include "klee/Config/config.h"
 #include "klee/Support/ErrorHandling.h"
 #include "klee/Support/FileHandling.h"
@@ -5,8 +7,6 @@
 
 #include <csignal>
 
-#define ENABLE_Z3 1
-#ifdef ENABLE_Z3
 
 #include "Z3Solver.h"
 #include "Z3Builder.h"
