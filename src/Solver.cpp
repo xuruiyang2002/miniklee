@@ -29,7 +29,6 @@ void Solver::setCoreSolverTimeout(time::Span timeout) {
 
 bool Solver::evaluate(const Query& query) {
     // Maintain invariants implementations expect.
-    errs() << "DEBUG: evaluate\n";
     if (ConstantExpr *CE = dyn_cast<ConstantExpr>(query.expr.get())) {
         if (CE->isTrue())
             return true;
@@ -87,15 +86,3 @@ Solver::getInitialValues(const Query& query,
 std::pair< ref<Expr>, ref<Expr> > Solver::getRange(const Query& query) {
     assert(false && "Not implemented yet");
 }
-
-// FIXME: Not implement yet
-// void Query::dump() const {
-//     llvm::errs() << "Constraints [\n";
-//     for (const auto &constraint : constraints)
-//         constraint->dump();
-
-//     llvm::errs() << "]\n";
-//     llvm::errs() << "Query [\n";
-//     expr->dump();
-//     llvm::errs() << "]\n";
-// }

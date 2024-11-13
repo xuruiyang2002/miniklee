@@ -3,6 +3,8 @@
 #include "SolverImpl.h"
 
 #include <memory>
+#include <random>
+#include <algorithm>
 
 namespace miniklee {
 
@@ -21,6 +23,7 @@ public:
                             std::vector<std::vector<int32_t> > *values);
     void solveConstraint(const ref<Expr> &e, int32_t &res);
     SolverRunStatus getOperationStatusCode();
+    int32_t generateRandomExcluding(const std::vector<int32_t>& cannot);
 };
 
 TinySolverImpl::TinySolverImpl() {}
@@ -50,56 +53,66 @@ bool TinySolverImpl::internalRunSolver(
     const Query &query, const std::vector<const SymbolicExpr *> *objects,
     std::vector<std::vector<int32_t> > *values) {
 
-    llvm::errs() << "DEBUG: internalRunSolver 1\n";
     int32_t res;
-    solveConstraint(query.expr, res);
-    llvm::errs() << "DEBUG: HIT internalRunSolver 2\n";
+    bool assigned = false; // Record whether the res is assigned
+    std::vector<int32_t> cannot;
+
+    // Deal with current branch condition
+    if (query.expr->getKind() == Expr::Eq) {
+        solveConstraint(query.expr, res);
+        assigned = true;
+    } else if (query.expr->getKind() == Expr::Not){
+        int32_t cannotbe;
+        solveConstraint(query.expr->getKid(0), cannotbe);
+        cannot.push_back(cannotbe);
+    } else assert(false && "This compare expression currently not support");
 
     for (auto c : query.constraints) {
-        assert(c && "Not Null");
-        // Logically, constraints are added incrementally, 
-        // so we only need to check any one of the previous ones. 
-        // But what if someone is unreasonable? So we check all of them.
-        int32_t prev;
-        solveConstraint(c, prev);
-        if (res != prev) return false;
+        if (c->getKind() == Expr::Eq) {
+            int32_t prev;
+            solveConstraint(c, prev);
+            if (assigned && (res != prev)) return false;
+            else {
+                res = prev;
+                assigned = true;
+            }
+        } else if (c->getKind() == Expr::Not) {
+            int32_t cannotbe;
+            solveConstraint(query.expr->getKid(0), cannotbe);
+            if (assigned && (res == cannotbe)) return false;
+            cannot.push_back(cannotbe);
+        } else assert(false && "This compare expression currently not support");
     }
-    llvm::errs() << "DEBUG: HIT internalRunSolver 3\n";
 
-    if (objects && objects->size() == 1) {
-        assert(values);
+    if (objects && values) {
+        if (!assigned)
+            res = generateRandomExcluding(cannot);
         values->front().push_back(res);
+
+        llvm::errs() << "Assigning " << res << " " << "\n";
     }
     return true;
 }
 
+/// FIXME: This is really a naive Implementation
 void TinySolverImpl::solveConstraint(const ref<Expr> &e, int32_t &res) {
-    llvm::errs() << "DEBUG: solveConstraint\n";
     assert(e->getKind() == Expr::Eq && "Constraint must be an equality");
-    llvm::errs() << "DEBUG: HIT solveConstraints\n";
     // ax + b = c
     // => x = (c - b) / a
+    auto eq = dyn_cast<EqExpr>(e.get());
+    assert(eq && "Failed to cast to EqExpr");
 
-    ref<EqExpr> eq = dyn_cast<EqExpr>(e.get());
-    llvm::errs() << "DEBUG: HIT 1\n";
-
-    // Assume a is 1
     auto left = dyn_cast<AddExpr>(eq->getKid(0).get());
-
-    llvm::errs() << "DEBUG: HIT 2\n";
+    assert(left && "Left side of equality is not an AddExpr");
 
     auto left_const = dyn_cast<ConstantExpr>(left->getKid(1).get());
+    assert(left_const && "Left side constant term is not a ConstantExpr");
+
     int32_t b = static_cast<int32_t>(left_const->getAPValue().getSExtValue());
 
-    llvm::errs() << "DEBUG: HIT 3\n";
-    
     auto right = dyn_cast<ConstantExpr>(e->getKid(1).get());
+    assert(right && "Right side of equality is not a ConstantExpr");
     int32_t c = static_cast<int32_t>(right->getAPValue().getSExtValue());
-    assert(right && "Currently follow the form of ax + b = c (c is ConstantExpr)");
-
-    // WARNING: This is a hack. Caution when loss of accuracy when a != 1
-
-    llvm::errs() << "DEBUG: " << c - b << " \n";
 
     res = c - b;
 }
@@ -111,4 +124,18 @@ SolverImpl::SolverRunStatus TinySolverImpl::getOperationStatusCode() {
 std::unique_ptr<Solver> createTinySolver() {
     return std::make_unique<Solver>(std::make_unique<TinySolverImpl>());
 }
+
+int32_t TinySolverImpl::generateRandomExcluding(const std::vector<int32_t>& cannot) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int32_t> dist(std::numeric_limits<int32_t>::min(), std::numeric_limits<int32_t>::max());
+
+    int32_t v;
+    do {
+        v = dist(gen);
+    } while (std::find(cannot.begin(), cannot.end(), v) != cannot.end());
+
+    return v;
+}
+
 }

@@ -324,14 +324,9 @@ void Executor::executeMakeSymbolic(ExecutionState& state, Instruction *symAddres
 
 Executor::StatePair Executor::fork(ExecutionState &current,
                                     ref<Expr> condition) {
-    // TODO: Invoke solver to determinie the feasibility of the condition
-    errs() << "DEBUG: fork\n";
-
+    // Invoke solver to determinie the feasibility of the condition
     bool trueBranch = this->solver->evaluate(Query(current.constraints, condition));
-    errs() << "DEBUG: HIT fork 1\n";
-    // FIXME: Deal with false branch
-    bool falseBranch = this->solver->evaluate(Query(current.constraints, condition));
-    errs() << "DEBUG: HIT fork 2\n";
+    bool falseBranch = this->solver->evaluate(Query(current.constraints, NotExpr::create(condition)));
 
     if (trueBranch && !falseBranch /* Solver::True */) {
         return StatePair(&current, nullptr);
