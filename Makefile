@@ -4,16 +4,26 @@ CXXFLAGS = -std=c++14 -Wall -I./include -I/usr/include/llvm-14 -I/usr/include/c+
 LDFLAGS = -nostdlib++ -L/usr/lib/llvm-14/lib -lLLVM -lpthread /usr/lib/x86_64-linux-gnu/libstdc++.so.6
 
 # File names
-SRCS = src/main.cpp src/Executor.cpp src/ExecutionState.cpp src/Expr.cpp src/Time.cpp src/CoreSolver.cpp src/Solver.cpp src/SolverImpl.cpp src/DummySolver.cpp 
+SRCS = src/main.cpp \
+	src/Executor.cpp \
+	src/ExecutionState.cpp \
+	src/Expr.cpp \
+	src/Time.cpp \
+	src/CoreSolver.cpp \
+	src/Solver.cpp \
+	src/SolverImpl.cpp \
+	src/DummySolver.cpp \
+	src/TinySolver.cpp
+
 OBJS = $(SRCS:.cpp=.o)
-EXEC = minklee
+EXEC = miniklee
 
 # Targets and rules
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $(EXEC) $(LDFLAGS)
-	rm -f $(OBJS)
+	# rm -f $(OBJS)
 
 # Compile .cpp files to .o files
 %.o: %.cpp

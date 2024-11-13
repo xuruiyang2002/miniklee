@@ -17,6 +17,7 @@ namespace miniklee {
         STP_SOLVER,
         METASMT_SOLVER,
         DUMMY_SOLVER,
+        TINY_SOLVER,
         Z3_SOLVER,
         NO_SOLVER
     };
@@ -79,7 +80,7 @@ namespace miniklee {
     /// Solver::Unknown
     ///
     /// \return True on success.
-    bool evaluate(const Query&, Validity &result);
+    bool evaluate(const Query&);
 
     /// mustBeTrue - Determine if the expression is provably true.
     /// 
@@ -180,7 +181,7 @@ namespace miniklee {
     // they want. This also allows us to optimize the representation.
     bool getInitialValues(const Query&, 
                             const std::vector<const SymbolicExpr*> &objects,
-                            std::vector< std::vector<unsigned char> > &result);
+                            std::vector< std::vector<int32_t> > &result);
 
     /// getRange - Compute a tight range of possible values for a given
     /// expression.
@@ -233,6 +234,10 @@ namespace miniklee {
     /// createDummySolver - Create a dummy solver implementation which always
     /// fails.
     std::unique_ptr<Solver> createDummySolver();
+
+    /// createTinySolver - Create a tiny solver implementation which 
+    /// do simple operations on quadratic equationslinear equation
+    std::unique_ptr<Solver> createTinySolver();
 
     // Create a solver based on the supplied ``CoreSolverType``.
     std::unique_ptr<Solver> createCoreSolver(CoreSolverType cst);

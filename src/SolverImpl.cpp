@@ -5,18 +5,8 @@ using namespace miniklee;
 
 SolverImpl::~SolverImpl() {}
 
-bool SolverImpl::computeValidity(const Query &query, Solver::Validity &result) {
-    bool isTrue, isFalse;
-    if (!computeTruth(query, isTrue))
-        return false;
-    if (isTrue) {
-        result = Solver::True;
-    } else {
-        if (!computeTruth(query.negateExpr(), isFalse))
-        return false;
-        result = isFalse ? Solver::False : Solver::Unknown;
-    }
-    return true;
+bool SolverImpl::computeValidity(const Query &query) {
+    assert(false && "TBD");
 }
 
 const char *SolverImpl::getOperationStatusString(SolverRunStatus statusCode) {

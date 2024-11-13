@@ -27,17 +27,16 @@ void Solver::setCoreSolverTimeout(time::Span timeout) {
     impl->setCoreSolverTimeout(timeout);
 }
 
-bool Solver::evaluate(const Query& query, Validity &result) {
-    // WARNING: this is a hack 
-    // assert(query.expr->getWidth() == Expr::Bool && "Invalid expression type!");
-
+bool Solver::evaluate(const Query& query) {
     // Maintain invariants implementations expect.
+    errs() << "DEBUG: evaluate\n";
     if (ConstantExpr *CE = dyn_cast<ConstantExpr>(query.expr.get())) {
-        result = CE->isTrue() ? True : False;
-        return true;
+        if (CE->isTrue())
+            return true;
+        else
+            return false;
     }
-
-    return impl->computeValidity(query, result);
+    return impl->computeValidity(query);
 }
 
 bool Solver::mustBeTrue(const Query& query, bool &result) {
@@ -79,14 +78,9 @@ bool Solver::getValue(const Query& query, ref<ConstantExpr> &result) {
 bool 
 Solver::getInitialValues(const Query& query,
                             const std::vector<const SymbolicExpr*> &objects,
-                            std::vector< std::vector<unsigned char> > &values) {
-    bool hasSolution;
+                            std::vector< std::vector<int32_t> > &values) {
     bool success =
-        impl->computeInitialValues(query, objects, values, hasSolution);
-    // FIXME: Propagate this out.
-    if (!hasSolution)
-        return false;
-        
+        impl->computeInitialValues(query, objects, values);
     return success;
 }
 

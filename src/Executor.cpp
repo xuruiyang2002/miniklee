@@ -17,7 +17,7 @@ using namespace miniklee;
 
 Executor::Executor(std::unique_ptr<llvm::Module> module) 
     : module(std::move(module)) {
-    this->solver = createCoreSolver(CoreSolverType::DUMMY_SOLVER);
+    this->solver = createCoreSolver(CoreSolverType::TINY_SOLVER);
 }
 
 void Executor::runFunctionAsMain(Function *function) {
@@ -179,7 +179,12 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
 
         switch(ii->getPredicate()) {
         case ICmpInst::ICMP_EQ: {
-            assert(false && "TODO: ICMP_EQ comparison");
+            errs() << "ICMP_EQ comparison\n";
+            ref<Expr> lshValue = getValue(state, ii->getOperand(0));
+            ref<Expr> rshValue = getValue(state, ii->getOperand(1));
+            ref<Expr> eq = EqExpr::create(lshValue, rshValue);
+
+            executeMemoryOperation(state, true, ii, eq, 0);
             break;
         }
         case ICmpInst::ICMP_NE: {
@@ -320,22 +325,19 @@ void Executor::executeMakeSymbolic(ExecutionState& state, Instruction *symAddres
 Executor::StatePair Executor::fork(ExecutionState &current,
                                     ref<Expr> condition) {
     // TODO: Invoke solver to determinie the feasibility of the condition
-    Solver::Validity res;
-    bool success = this->solver->evaluate(Query(current.constraints, condition), res);
-    if (!success) {
-        current.pc = current.prevPC;
-        // TODO: Use terminte to exit elegently
-        errs() << (false && "Query timed out (fork)");
-        return StatePair(nullptr, nullptr);
-    }
+    errs() << "DEBUG: fork\n";
 
-    // TODO: remove debug info
-    // errs() << "DEBUG: success is " << success << ", res is " << res << "\n";
-    if (res == Solver::True) {
+    bool trueBranch = this->solver->evaluate(Query(current.constraints, condition));
+    errs() << "DEBUG: HIT fork 1\n";
+    // FIXME: Deal with false branch
+    bool falseBranch = this->solver->evaluate(Query(current.constraints, condition));
+    errs() << "DEBUG: HIT fork 2\n";
+
+    if (trueBranch && !falseBranch /* Solver::True */) {
         return StatePair(&current, nullptr);
-    } else if (res == Solver::False) {
+    } else if (!trueBranch && falseBranch /* Solver::False */) {
         return StatePair(nullptr, &current);
-    } else {
+    } else { /* Solver::Unknown */
         // ExecutionState *falseState, *trueState = &current;
         // falseState = trueState->branch();
         // addedStates.push_back(falseState);

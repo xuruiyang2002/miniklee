@@ -50,7 +50,7 @@ namespace miniklee {
     /// Solver::Unknown
     ///
     /// \return True on success
-    virtual bool computeValidity(const Query& query, Solver::Validity &result);
+    virtual bool computeValidity(const Query& query);
     
     /// computeTruth - Determine whether the given query expression is provably true
     /// given the constraints.
@@ -80,9 +80,8 @@ namespace miniklee {
     virtual bool computeInitialValues(const Query& query,
                                         const std::vector<const SymbolicExpr*> 
                                         &objects,
-                                        std::vector< std::vector<unsigned char> > 
-                                        &values,
-                                        bool &hasSolution) = 0;
+                                        std::vector< std::vector<int32_t> > 
+                                        &values) = 0;
     
     /// getOperationStatusCode - get the status of the last solver operation
     virtual SolverRunStatus getOperationStatusCode() = 0;

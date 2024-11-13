@@ -8,8 +8,6 @@ namespace miniklee {
 /// Resembles a set of constraints that can be passed around
 ///
 class ConstraintSet {
-    friend class ConstraintManager;
-
 public:
     using constraints_ty = std::vector<ref<Expr>>;
     using iterator = constraints_ty::iterator;

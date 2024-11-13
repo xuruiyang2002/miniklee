@@ -14,6 +14,8 @@ std::unique_ptr<Solver> createCoreSolver(CoreSolverType cst) {
     switch (cst) {
     case DUMMY_SOLVER:
         return createDummySolver();
+    case TINY_SOLVER:
+        return createTinySolver();
     case Z3_SOLVER:
     #ifdef ENABLE_Z3
         klee_message("Using Z3 solver backend");
