@@ -328,11 +328,11 @@ public:\
     bool isZero() const { return getAPValue().isMinValue(); }\
 \
     bool isTrue() const {\
-        return (getWidth() == Expr::Bool && value.getBoolValue() == true);\
+        return (getWidth() == Expr::Int32 && value.getSExtValue() != 0);\
     }\
 \
     bool isFalse() const {\
-        return (getWidth() == Expr::Bool && value.getBoolValue() == false);\
+        return (getWidth() == Expr::Int32 && value.getSExtValue() == 0);\
     }\
 \
     bool isAllOnes() const {\

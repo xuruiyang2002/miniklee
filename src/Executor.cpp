@@ -227,7 +227,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             break;
         }
         case ICmpInst::ICMP_SLT: {
-            errs() << "State " << state.getID() << ": ICMP_SLT comparison\n";
+            errs() << "State " << state.getID() << " ICMP_SLT comparison\n";
             ref<Expr> lshValue = getValue(state, ii->getOperand(0));
             ref<Expr> rshValue = getValue(state, ii->getOperand(1));
             ref<Expr> slt = SltExpr::create(lshValue, rshValue);
