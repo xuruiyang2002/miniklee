@@ -7,8 +7,10 @@ int main() {
 
     int i = 0;
     if (a + 2 == 100) {
+        // Should reach, a must be 98
         i += 2;
     } else {
+        // Should reach, a can be assigned all values that are not 98
         i += 3;
     }
     
