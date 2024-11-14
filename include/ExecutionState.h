@@ -34,10 +34,13 @@ public:
 public:
     ExecutionState() {}
 
-    // only to create the initial state
+    // Only to create the initial state
     ExecutionState(llvm::Function *f);
 
+    // Copy constructor
     ExecutionState(const ExecutionState& state);
+
+    ExecutionState *branch();
 
 };
 

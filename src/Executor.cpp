@@ -337,7 +337,7 @@ Executor::StatePair Executor::fork(ExecutionState &current,
         // falseState = trueState->branch();
         // addedStates.push_back(falseState);
         // addConstraint(*trueState, condition);
-        // addConstraint(*falseState, Expr::createIsZero(condition));
+        // addConstraint(*falseState, NotExpr::create(condition));
         // return StatePair(trueState, falseState);
         assert(false && "Not implement yet");
     }

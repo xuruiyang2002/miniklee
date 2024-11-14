@@ -15,3 +15,7 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     prevPC(state.prevPC),
     locals(state.locals),
     constraints(state.constraints) {}
+
+ExecutionState *ExecutionState::branch() {
+    return new ExecutionState(*this);
+}
