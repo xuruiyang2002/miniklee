@@ -171,6 +171,18 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
         break;
     }
 
+    case Instruction::Sub: {
+        errs() << "State " << state.getID() << " Sub\n";
+        BinaryOperator *ao = cast<BinaryOperator>(i);
+
+        ref<Expr> lshValue = getValue(state, ao->getOperand(0));
+        ref<Expr> rshValue = getValue(state, ao->getOperand(1));
+        ref<Expr> sub = SubExpr::create(lshValue, rshValue);
+
+        executeMemoryOperation(state, true, i /* simply the Load instr itself */, sub, 0);
+        break;
+    }
+
     // Compare
     case Instruction::ICmp: {
         CmpInst *ci = cast<CmpInst>(i);

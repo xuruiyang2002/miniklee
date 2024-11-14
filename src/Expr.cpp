@@ -114,6 +114,20 @@ ref<Expr> AddExpr::create(const ref<Expr> l, const ref<Expr> r) {
     return AddExpr::alloc(l, r);
 }
 
+ref<Expr> SubExpr::create(const ref<Expr> l, const ref<Expr> r) {
+    auto probeLhs = dyn_cast<ConstantExpr>(l.get());
+    auto probeRhs = dyn_cast<ConstantExpr>(r.get());
+
+    if (probeLhs && probeRhs) {
+        return ConstantExpr::create(
+            probeLhs->getAPValue().getSExtValue() - probeRhs->getAPValue().getSExtValue(),
+            Expr::Int32
+        );
+    }
+    
+    return SubExpr::alloc(l, r);
+}
+
 ref<Expr> SltExpr::create(const ref<Expr> l, const ref<Expr> r) {
     auto probeLhs = dyn_cast<ConstantExpr>(l.get());
     auto probeRhs = dyn_cast<ConstantExpr>(r.get());
