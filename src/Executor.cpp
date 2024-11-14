@@ -22,21 +22,18 @@ Executor::Executor(std::unique_ptr<llvm::Module> module)
 
 void Executor::runFunctionAsMain(Function *function) {
     ExecutionState initialState(function);
-    states.push(initialState);
+    states.addState(&initialState);
 
     // main interpreter loop
-    while (!states.empty()) {
-        // 1. Select a state to work on.
+    while (!states.isEmpty()) {
         // FIXME: Need searcher to choose next state?
-        ExecutionState &state = states.top();
-        // states.pop();
+        ExecutionState &state = states.selectState();
 
         Instruction *i = &*state.pc;
         stepInstruction(state);
 
         executeInstruction(state, i);
 
-        // 4. Update state
         updateStates(&state);
     }
 }
@@ -52,13 +49,13 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     switch (i->getOpcode()) {
     // Control flow
     case Instruction::Ret: {
-        errs() << "Return\n";
+        errs() << "State " << state.getID() << " Ret\n";
         // // FIXME: Handle return
-        states.pop();
+        removedStates.push_back(&state);
         break;
     }
     case Instruction::Br: {
-        errs() << "Br\n";
+        errs() << "State " << state.getID() << " Br\n";
         BranchInst *bi = cast<BranchInst>(i);
         if (bi->isUnconditional()) {
             transferToBasicBlock(bi->getSuccessor(0), state);
@@ -86,6 +83,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
                 && "Unknown call instruction");
         assert(cb->arg_size()  == 3 && "Unexpected Error");
 
+        errs() << "State " << state.getID() << " Mk Sym\n";
         // 1. Make symbolic
         Instruction *sym = dyn_cast<Instruction>(cb->getArgOperand(0));
         assert(sym && "First argument should be a variable (Instruction type)");
@@ -111,7 +109,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     // Memory instructions...
     case Instruction::Alloca: {
         // TODO: remove debug info
-        errs() << "Alloca\n";
+        errs() << "State " << state.getID() << ": Alloca\n";
         AllocaInst *ai = cast<AllocaInst>(i);
         assert("Support Int32 type only" 
                 && ai->getAllocatedType() == Type::getInt32Ty(i->getContext()));
@@ -122,7 +120,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     }
 
     case Instruction::Load: {
-        errs() << "Load\n";
+        errs() << "State " << state.getID() << " Load\n";
         LoadInst *li = cast<LoadInst>(i);
         
         Instruction *address = dyn_cast<Instruction>(li->getPointerOperand());
@@ -133,7 +131,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     }
 
     case Instruction::Store: {
-        errs() << "Store\n";
+        errs() << "State " << state.getID() << " Store\n";
         StoreInst *si = cast<StoreInst>(i);
         // Retrieve the target address
         Instruction *target = dyn_cast<Instruction>(si->getOperand(1));
@@ -162,7 +160,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
 
     // Arithmetic
     case Instruction::Add: {
-        errs() << "Add\n";
+        errs() << "State " << state.getID() << " Add\n";
         BinaryOperator *ao = cast<BinaryOperator>(i);
 
         ref<Expr> lshValue = getValue(state, ao->getOperand(0));
@@ -180,7 +178,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
 
         switch(ii->getPredicate()) {
         case ICmpInst::ICMP_EQ: {
-            errs() << "ICMP_EQ comparison\n";
+            errs() << "State " << state.getID() << " ICMP_EQ comparison\n";
             ref<Expr> lshValue = getValue(state, ii->getOperand(0));
             ref<Expr> rshValue = getValue(state, ii->getOperand(1));
             ref<Expr> eq = EqExpr::create(lshValue, rshValue);
@@ -217,7 +215,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
             break;
         }
         case ICmpInst::ICMP_SLT: {
-            errs() << "ICMP_SLT comparison\n";
+            errs() << "State " << state.getID() << ": ICMP_SLT comparison\n";
             ref<Expr> lshValue = getValue(state, ii->getOperand(0));
             ref<Expr> rshValue = getValue(state, ii->getOperand(1));
             ref<Expr> slt = SltExpr::create(lshValue, rshValue);
@@ -244,9 +242,22 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
 }
 
 void Executor::updateStates(ExecutionState *current)  {
-    errs() << "Updating states\n";
+    // std::cout << GREY_TEXT("Updating states") << std::endl;
     assert(current);
 
+    states.addState(addedStates.begin(), addedStates.end());
+    addedStates.clear();
+
+    for (std::vector<ExecutionState *>::iterator it = removedStates.begin(),
+                                                ie = removedStates.end();
+        it != ie; ++it) {
+        ExecutionState *es = *it;
+        std::deque<ExecutionState*>::iterator it2 = states.find(es);
+        assert(it2 != states.end());
+
+        states.erase(it2);
+    }
+    removedStates.clear();
 }
 
 void Executor::transferToBasicBlock(BasicBlock *dst, ExecutionState &state) {

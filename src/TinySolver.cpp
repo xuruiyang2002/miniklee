@@ -29,7 +29,6 @@ public:
 TinySolverImpl::TinySolverImpl() {}
 
 bool TinySolverImpl::computeValidity(const Query &query) {
-    llvm::errs() << "DEBUG: computeValidity\n";
     return internalRunSolver(query, NULL /* objects */, NULL /* values */);
 }
 

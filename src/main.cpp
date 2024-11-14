@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
         err.print(argv[0], llvm::errs());
         return 1;
     }
-    std::cout << "\033[1;32mLLVM IR file loaded successfully.\033[0m\n";
+    std::cout << GREEN_TEXT("LLVM IR file loaded successfully") << std::endl;
 
 
     // Create the executor to interpret the program

@@ -6,8 +6,11 @@
 
 #include "ExecutionState.h"
 
+std::uint32_t ExecutionState::nextID = 1;
+
 ExecutionState::ExecutionState(llvm::Function* function)
     : pc(function->begin()->begin()), prevPC(nullptr) {
+        setID();
 }
 
 ExecutionState::ExecutionState(const ExecutionState& state):
@@ -17,7 +20,9 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     constraints(state.constraints) {}
 
 ExecutionState *ExecutionState::ExecutionState::branch() {
-    return new ExecutionState(*this);
+    auto *falseState = new ExecutionState(*this);
+    falseState->setID();
+    return falseState;
 }
 
 void ExecutionState::addConstraint(ref<Expr> e) {

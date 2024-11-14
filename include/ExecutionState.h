@@ -31,6 +31,12 @@ public:
     // Path constraints collected so far
     ConstraintSet constraints;
 
+    // The global state counter
+    static std::uint32_t nextID;
+
+    // the state id
+    std::uint32_t id = 0;
+
 public:
     ExecutionState() {}
 
@@ -43,6 +49,9 @@ public:
     ExecutionState *branch();
 
     void addConstraint(ref<Expr> e);
+
+    std::uint32_t getID() const { return id; };
+    void setID() { id = nextID++; };
 };
 
 #endif // EXECUTIONSTATE_H

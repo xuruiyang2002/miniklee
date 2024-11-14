@@ -33,7 +33,7 @@ SRC ?= ./test/constraint.c
 OUT ?= ./test/constraint.ll
 
 run:
-	clang -emit-llvm -g -S $(SRC) -o $(OUT)
+	clang -emit-llvm -g -O0 -S $(SRC) -o $(OUT)
 	./$(EXEC) $(OUT)
 
 # Clean up
