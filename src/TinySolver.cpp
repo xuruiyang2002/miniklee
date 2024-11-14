@@ -24,6 +24,7 @@ public:
     void solveConstraint(const ref<Expr> &e, int32_t &res);
     SolverRunStatus getOperationStatusCode();
     int32_t generateRandomExcluding(const std::vector<int32_t>& cannot);
+    std::pair<int32_t, int32_t> evaluate(ref<Expr> e);
 };
 
 TinySolverImpl::TinySolverImpl() {}
@@ -77,7 +78,7 @@ bool TinySolverImpl::internalRunSolver(
             }
         } else if (c->getKind() == Expr::Not) {
             int32_t cannotbe;
-            solveConstraint(query.expr->getKid(0), cannotbe);
+            solveConstraint(c->getKid(0), cannotbe);
             if (assigned && (res == cannotbe)) return false;
             cannot.push_back(cannotbe);
         } else assert(false && "This compare expression currently not support");
@@ -90,30 +91,77 @@ bool TinySolverImpl::internalRunSolver(
 
         llvm::errs() << "Assigning " << res << " " << "\n";
     }
+
+    {
+        if (!assigned)
+            res = generateRandomExcluding(cannot);
+
+        llvm::errs() << "Assigning " << res << " " << "\n";
+    }
     return true;
 }
 
-/// FIXME: This is really a naive Implementation
+/// FIXME: This is a naive Implementation
 void TinySolverImpl::solveConstraint(const ref<Expr> &e, int32_t &res) {
     assert(e->getKind() == Expr::Eq && "Constraint must be an equality");
-    // ax + b = c
-    // => x = (c - b) / a
-    auto eq = dyn_cast<EqExpr>(e.get());
-    assert(eq && "Failed to cast to EqExpr");
+    // Solving equaltation (X1 == X2)
+    // where 
+    //      X => X | X1 + X2 | X1 - X2
+    //      Y => symbolic | constant 
+    ref<EqExpr> eq = dyn_cast<EqExpr>(e.get());
+    ref<Expr> left = e->getKid(0);
+    ref<Expr> right = e->getKid(1);
 
-    auto left = dyn_cast<AddExpr>(eq->getKid(0).get());
-    assert(left && "Left side of equality is not an AddExpr");
+    // Return pair: <Num of symblics, Value of constants>
+    std::pair<int32_t, int32_t> p1 = evaluate(left);
+    std::pair<int32_t, int32_t> p2 = evaluate(right);
 
-    auto left_const = dyn_cast<ConstantExpr>(left->getKid(1).get());
-    assert(left_const && "Left side constant term is not a ConstantExpr");
+    int valueConst = p2.first - p1.first;
+    int numSym = p1.second - p2.second;
 
-    int32_t b = static_cast<int32_t>(left_const->getAPValue().getSExtValue());
+    if (numSym == 0)
+        assert(valueConst == 0 && "Invalid expression");
+    else {
+        res = valueConst / numSym;
+    }
+}
 
-    auto right = dyn_cast<ConstantExpr>(e->getKid(1).get());
-    assert(right && "Right side of equality is not a ConstantExpr");
-    int32_t c = static_cast<int32_t>(right->getAPValue().getSExtValue());
-
-    res = c - b;
+std::pair<int32_t, int32_t> TinySolverImpl::evaluate(ref<Expr> e) {
+    switch (e->getKind()) {
+    case Expr::Constant: {
+        auto *constant = dyn_cast<ConstantExpr>(e.get());
+        return std::pair<int32_t, int32_t>(
+                constant->getAPValue().getSExtValue(),
+                0 /* Number of symbolic variables */);
+        break;
+    }
+    case Expr::Symbolic: {
+        return std::pair<int32_t, int32_t>(
+                0 /* Value of constant */,
+                1 /* Number of symbolic variables */);
+        break;
+    }
+    case Expr::Add: {
+        auto *add = dyn_cast<AddExpr>(e.get());
+        auto p1 = evaluate(add->getKid(0));
+        auto p2 = evaluate(add->getKid(1));
+        return std::pair<int32_t, int32_t>(
+                p1.first + p2.first,
+                p1.second + p2.second);
+        break;
+    }
+    case Expr::Sub: {
+        auto *sub = dyn_cast<SubExpr>(e.get());
+        auto p1 = evaluate(sub->getKid(0));
+        auto p2 = evaluate(sub->getKid(1));
+        return std::pair<int32_t, int32_t>(
+                p1.first - p2.first,
+                p1.second - p2.second);
+        break;
+    }
+    default:
+        assert(false && "unhandled expression kind");
+    }
 }
 
 SolverImpl::SolverRunStatus TinySolverImpl::getOperationStatusCode() {
