@@ -14,7 +14,7 @@ public:
     
     std::unique_ptr<Solver> solver;
 
-    std::stack<ExecutionState> stateStack;
+    std::stack<ExecutionState> states;
 
     typedef std::pair<ExecutionState*,ExecutionState*> StatePair;
 

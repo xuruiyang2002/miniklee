@@ -22,14 +22,14 @@ Executor::Executor(std::unique_ptr<llvm::Module> module)
 
 void Executor::runFunctionAsMain(Function *function) {
     ExecutionState initialState(function);
-    stateStack.push(initialState);
+    states.push(initialState);
 
     // main interpreter loop
-    while (!stateStack.empty()) {
+    while (!states.empty()) {
         // 1. Select a state to work on.
         // FIXME: Need searcher to choose next state?
-        ExecutionState &state = stateStack.top();
-        // stateStack.pop();
+        ExecutionState &state = states.top();
+        // states.pop();
 
         Instruction *i = &*state.pc;
         stepInstruction(state);
@@ -37,6 +37,7 @@ void Executor::runFunctionAsMain(Function *function) {
         executeInstruction(state, i);
 
         // 4. Update state
+        updateStates(&state);
     }
 }
 
@@ -53,7 +54,7 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
     case Instruction::Ret: {
         errs() << "Return\n";
         // // FIXME: Handle return
-        stateStack.pop();
+        states.pop();
         break;
     }
     case Instruction::Br: {
@@ -244,8 +245,8 @@ void Executor::executeInstruction(ExecutionState& state, Instruction* i) {
 
 void Executor::updateStates(ExecutionState *current)  {
     errs() << "Updating states\n";
-    // TODO: Implement me
     assert(current);
+
 }
 
 void Executor::transferToBasicBlock(BasicBlock *dst, ExecutionState &state) {
@@ -332,15 +333,16 @@ Executor::StatePair Executor::fork(ExecutionState &current,
         return StatePair(&current, nullptr);
     } else if (!trueBranch && falseBranch /* Solver::False */) {
         return StatePair(nullptr, &current);
-    } else { /* Solver::Unknown */
+    } else if (trueBranch && falseBranch /* Solver::Unknown */ ) {
         ExecutionState *falseState, *trueState = &current;
         falseState = trueState->branch();
         addedStates.push_back(falseState);
+
         addConstraint(*trueState, condition);
         addConstraint(*falseState, NotExpr::create(condition));
 
         return StatePair(trueState, falseState);
-    }
+    } else { assert(false && "Unexpected Error"); }
 }
 
 void Executor::addConstraint(ExecutionState &state, ref<Expr> condition) {
