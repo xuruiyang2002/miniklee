@@ -42,6 +42,7 @@ public:
 
     ExecutionState *branch();
 
+    void addConstraint(ref<Expr> e);
 };
 
 #endif // EXECUTIONSTATE_H

@@ -16,6 +16,11 @@ ExecutionState::ExecutionState(const ExecutionState& state):
     locals(state.locals),
     constraints(state.constraints) {}
 
-ExecutionState *ExecutionState::branch() {
+ExecutionState *ExecutionState::ExecutionState::branch() {
     return new ExecutionState(*this);
+}
+
+void ExecutionState::addConstraint(ref<Expr> e) {
+    // FIXME: Consider adding a constraint manager for optimization.
+    constraints.push_back(e);
 }

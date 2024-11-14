@@ -23,6 +23,13 @@ public:
     // Constructor that accepts an llvm::Module pointer
     explicit Executor(std::unique_ptr<llvm::Module> module);
 
+    // Used to track states that have been added during the current
+    // instructions step. 
+    std::vector<ExecutionState *> addedStates;
+    // Used to track states that have been removed during the current
+    // instructions step. 
+    std::vector<ExecutionState *> removedStates;
+
 private:
 
     void stepInstruction(ExecutionState& state);
@@ -44,6 +51,10 @@ private:
     void executeMakeSymbolic(ExecutionState& state, Instruction *sym, std::string name);
 
     StatePair fork(ExecutionState &current, ref<Expr> condition);
+
+    /// Add the given (boolean) condition as a constraint on state. This
+    /// function is a wrapper around the state's addConstraint function.
+    void addConstraint(ExecutionState &state, ref<Expr> condition);
 
 };
 

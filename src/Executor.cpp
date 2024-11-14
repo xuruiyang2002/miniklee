@@ -333,12 +333,22 @@ Executor::StatePair Executor::fork(ExecutionState &current,
     } else if (!trueBranch && falseBranch /* Solver::False */) {
         return StatePair(nullptr, &current);
     } else { /* Solver::Unknown */
-        // ExecutionState *falseState, *trueState = &current;
-        // falseState = trueState->branch();
-        // addedStates.push_back(falseState);
-        // addConstraint(*trueState, condition);
-        // addConstraint(*falseState, NotExpr::create(condition));
-        // return StatePair(trueState, falseState);
-        assert(false && "Not implement yet");
+        ExecutionState *falseState, *trueState = &current;
+        falseState = trueState->branch();
+        addedStates.push_back(falseState);
+        addConstraint(*trueState, condition);
+        addConstraint(*falseState, NotExpr::create(condition));
+
+        return StatePair(trueState, falseState);
     }
+}
+
+void Executor::addConstraint(ExecutionState &state, ref<Expr> condition) {
+    if (miniklee::ConstantExpr *CE = dyn_cast<miniklee::ConstantExpr>(condition.get())) {
+        if (!CE->isTrue())
+        llvm::report_fatal_error("attempt to add invalid constraint");
+        return;
+    }
+
+    state.addConstraint(condition);
 }
